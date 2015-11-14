@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="GBK">
+    <file url="file://$PROJECT_DIR$/src/com/listviewaddheader/adapter/ListViewAdapter.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/com/listviewaddheader/adapter/TopViewPagerAdapter.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/com/listviewaddheader/ui/MainActivity.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/com/listviewaddheader/utils/HelperUtils.java" charset="GBK" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>
