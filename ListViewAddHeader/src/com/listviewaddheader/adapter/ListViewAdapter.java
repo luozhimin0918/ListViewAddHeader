@@ -17,7 +17,7 @@ public class ListViewAdapter extends BaseAdapter {
 	private Context mContext = null;
 	private List<Information> mInformationList;
 	private LayoutInflater mLayoutInflater;
-
+	ListViewAdapter listViewAdapter;
 	public ListViewAdapter(Context context, List<Information> informationList) {
 		mContext = context;
 		mInformationList = informationList;
