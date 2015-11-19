@@ -40,6 +40,7 @@ public class MainActivity extends Activity implements OnItemClickListener,
 	private Handler mHandler;
 	private int start = 0;
 	private static int refreshCnt = 0;
+	private int test;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -127,7 +128,7 @@ public class MainActivity extends Activity implements OnItemClickListener,
 
 	private void dosomething(Object item) {
 		// TODO Auto-generated method stub
-		Toast.makeText(mContext, ((Information) item).getTitle(), 1000).show();
+		Toast.makeText(mContext, ((Information) item).getTitle(), Toast.LENGTH_LONG).show();
 	}
 
 	@Override
