@@ -24,6 +24,7 @@ public class TopViewPagerAdapter extends PagerAdapter {
 	private Context mContext;
 	private LayoutInflater mInflater;
 	private ImageDownloader mImageDownloader;
+	private ImageDownloader dd;
 
 	public TopViewPagerAdapter(Context context, List<String> imageList) {
 		mContext = context;
