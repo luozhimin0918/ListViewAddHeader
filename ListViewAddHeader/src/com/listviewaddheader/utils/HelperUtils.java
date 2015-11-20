@@ -39,582 +39,572 @@ import android.widget.Toast;
 import com.listviewaddheader.common.PathCommonDefines;
 
 public class HelperUtils {
-	private static final String TAG = HelperUtils.class.getSimpleName();
-	public static final int SINA_SHARE_SUCCESS = 10;
-	public static final int SINA_SHARE_ERROR = 11;
-	public static final int SINA_SHARE_EXCEPTION = 12;
-	public static final int TENCENT_SHARE_SUCCESS = 13;
-	public static final int TENCENT_SHARE_ERROR = 14;
-	public static final int QZONE_SHARE_SUCCESS = 18;
-	public static final int QZONE_SHARE_ERROR = 19;
-	public static final int TENCENT_SHARE_EXCEPTION = 15;
-	public static final int FAVORITE_IMAGE_SUCCESS = 16;
-	public static final int FAVORITE_IMAGE_FAILE = 17;
-
-	private static final String addr = "http://api.sms.cn/mt/";
-	private static final String userid = "userid=";
-
-	private static HelperUtils mInstance = null;
-
-	public static HelperUtils getInstance() {
-		if (mInstance == null) {
-			mInstance = new HelperUtils();
-		}
-		return mInstance;
-	}
-
-	public static String getNumberFromString(String str) {
-		String str2 = "";
-		if (str != null && !"".equals(str)) {
-			for (int i = 0; i < str.length(); i++) {
-				if (str.charAt(i) >= 48 && str.charAt(i) <= 57) {
-					str2 += str.charAt(i);
-				}
-			}
-		}
-		return str2;
-	}
-
-
-
-	public static String send(String msg, String phone) throws Exception {
-		String massage = java.net.URLEncoder.encode(msg);
-		String pwdString = encryption("xianshisong31112501");
-		String straddr = addr + "?uid=31112501&pwd=" + pwdString + "&mobile="
-				+ phone + "&encode=utf8&content=" + massage;
-		StringBuffer sb = new StringBuffer(straddr);
-		URL url = new URL(sb.toString());
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod("POST");
-		BufferedReader in = new BufferedReader(new InputStreamReader(
-				url.openStream()));
-		String inputline = in.readLine();
-		System.out.println(inputline);
-		return inputline;
-	}
-
-	/**
-	 * ¶ÁÈ¡ÑéÖ¤Âë
-	 */
-	public static String read(String str) throws IOException {
-		File file = new File(str);
-		FileInputStream fis = new FileInputStream(file);
-		StringBuffer sb = new StringBuffer();
-
-		BufferedInputStream bis = new BufferedInputStream(fis);
-		BufferedReader read = new BufferedReader(new InputStreamReader(bis));
-		int c = 0;
-		while ((c = read.read()) != -1) {
-			sb.append((char) c);
-		}
-		read.close();
-		bis.close();
-		fis.close();
-		Log.i(TAG, sb.toString());
-		String verify = sb.toString();
-		return verify;
-	}
-
-	/**
-	 * »ñÈ¡6Î»Ëæ»úÊý×Ö
-	 */
-	public static int getSixNum() {
-		int numcode = (int) ((Math.random() * 9 + 1) * 100000);
-		return numcode;
-	}
-
-	/**
-	 * MD5¼ÓÃÜ
-	 * 
-	 * @param enc
-	 * @return
-	 */
-	public static String encryption(String enc) {
-		String md5 = null;
-		try {
-			MessageDigest digest = MessageDigest.getInstance("MD5");
-			byte[] bs = enc.getBytes();
-			digest.update(bs);
-			md5 = byte2hex(digest.digest());
-			Log.i("md5", md5);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		return md5;
-	}
-
-	private static String byte2hex(byte[] b) {
-		String hs = "";
-		String stmp = "";
-		for (int n = 0; n < b.length; n++) {
-			stmp = (java.lang.Integer.toHexString(b[n] & 0xFF));
-			if (stmp.length() == 1)
-				hs = hs + "0" + stmp;
-			else
-				hs = hs + stmp;
-		}
-		return hs;
-	}
-
-	/**
-	 * »ñÈ¡µ±Ç°ÈÕÆÚ
-	 */
-	public static String getCurrentDate() {
-		final Calendar c = Calendar.getInstance();
-		int mYear = c.get(Calendar.YEAR); // »ñÈ¡µ±Ç°Äê·Ý
-		int mMonth = c.get(Calendar.MONTH);// »ñÈ¡µ±Ç°ÔÂ·Ý
-		int mDay = c.get(Calendar.DAY_OF_MONTH);// »ñÈ¡µ±Ç°ÔÂ·ÝµÄÈÕÆÚºÅÂë
-		return mYear + "-" + mMonth + "-" + mDay;
-	}
-
-	/**
-	 * ¸ñÊ½»¯ÎÄ¼þÂ·¾¶(ÓÃÓÚ±æ±ðÊÇ·ñÊÇÂ·¾¶)
-	 * 
-	 * @param filePath
-	 *            ÎÄ¼þÂ·¾¶
-	 * @return ¸ñÊ½»¯ºóµÄÎÄ¼þÂ·¾¶
-	 */
-	public static String enCodeFilePath(String filePath) {
-		filePath = "file:" + filePath;
-		return filePath;
-	}
-
-	/**
-	 * px to sp
-	 * 
-	 * @param pxValue
-	 * @param fontScale
-	 * @return
-	 */
-	public static int px2sp(float pxValue, Context context) {
-		final float scale = context.getResources().getDisplayMetrics().density;
-		return (int) (pxValue / scale + 0.5f);
-	}
-
-	public static String unEnCodeFilePath(String filePath) {
-		if (filePath != null) {
-			filePath = filePath.replace("file:", "");
-		}
-		return filePath;
-	}
-
-	/**
-	 * ÅÐ¶ÏÊÇ·ñÊÇÎÄ¼þÂ·¾¶
-	 * 
-	 * @param filePath
-	 * @return
-	 */
-	public static boolean isFilePath(String filePath) {
-		if (filePath != null) {
-			if (filePath.contains("file:")) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	// ÅÐ¶Ï×¢²áÓÊÏäÊÇ·ñÌîÐ´¹æ·¶
-	public static boolean emailFormat(String email) {
-		boolean tag = true;
-		final String pattern1 = "^([a-z0-9A-Z]+[-|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
-		final Pattern pattern = Pattern.compile(pattern1);
-		final Matcher mat = pattern.matcher(email);
-		if (!mat.find()) {
-			tag = false;
-		}
-		return tag;
-	}
-
-	/**
-	 * ¼ì²éÊÇ·ñ´æÔÚSDCard
-	 * 
-	 * @return
-	 */
-	public static boolean hasSdcard() {
-		String state = Environment.getExternalStorageState();
-		if (state.equals(Environment.MEDIA_MOUNTED)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public static int px2dip(Context context, float pxValue) {
-		final float scale = context.getResources().getDisplayMetrics().density;
-		return (int) (pxValue / scale + 0.5f);
-	}
-
-	public static int dip2px(Context context, float dipValue) {
-		final float scale = context.getResources().getDisplayMetrics().density;
-		return (int) (dipValue * scale + 0.5f);
-	}
-
-
-	/**
-	 * ÉèÖÃ°×ÌìºÍÒ¹¼äÄ£Ê½
-	 * 
-	 * @param window
-	 *            µ±Ç°µÄWindow´°Ìå
-	 * @param isNightModel
-	 *            ÊÇ·ñÊÇÒ¹¼äÄ£Ê½
-	 */
-	public void setScreenBrightness(Window window, boolean isNightModel) {
-
-		WindowManager.LayoutParams lp = window.getAttributes();
-
-		if (isNightModel) {
-
-			lp.screenBrightness = 0.4f;
-
-		} else {
-
-			lp.screenBrightness = 1.0f;
-
-		}
-
-		window.setAttributes(lp);
-
-	}
-
-	/**
-	 * ÏÔÊ¾ÌáÊ¾(String)
-	 * 
-	 * @param context
-	 * @param msg
-	 */
-	public void showToast(Context context, String msg) {
-		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-	}
-
-	/**
-	 * ÏÔÊ¾ÌáÊ¾(resource id)
-	 * 
-	 * @param context
-	 * @param msg
-	 */
-	public void showToast(Context context, int msg) {
-		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-	}
-
-	/**
-	 * Ìø×ªActivity
-	 * 
-	 * @param context
-	 * @param to
-	 */
-	public static void jump(Context context, Class to) {
-		Intent intent = new Intent(context, to);
-		context.startActivity(intent);
-	}
-
-	/**
-	 * ÑéÖ¤×Ö·û´®ÊÇ·ñÎª¿Õ »ò ""
-	 * 
-	 * @param str
-	 * @return
-	 */
-	public static boolean validateString(String str) {
-		if (str != null && !"".equals(str.trim()))
-			return false;
-
-		return true;
-	}
-
-	/**
-	 * µÃµ½°æ±¾ºÅ
-	 * 
-	 * @return
-	 */
-	public static String getVersionName(Context context) {
-		PackageInfo pinfo;
-		String versionName = "";
-		try {
-			pinfo = context.getPackageManager()
-					.getPackageInfo(context.getPackageName(),
-							PackageManager.GET_CONFIGURATIONS);
-			versionName = pinfo.versionName;
-
-		} catch (NameNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		return versionName;
-	}
-
-	/**
-	 * »ñµÃÇþµÀºÅ(ÍÆ¹ãÆ½Ì¨0=±¾Õ¾,1=°²ÖÇ,2=»ú·æ,3=°²×¿¹Ù·½)
-	 * 
-	 * @return
-	 */
-	public static String getChannelCode(Context context) {
-		String channelCode = "0";
-		try {
-			ApplicationInfo ai = context.getPackageManager()
-					.getApplicationInfo(context.getPackageName(),
-							PackageManager.GET_META_DATA);
-			Bundle bundle = ai.metaData;
-			if (bundle != null) {
-
-				Object obj = bundle.get("UMENG_CHANNEL");
-				if (obj != null) {
-					channelCode = obj.toString();
-				}
-				Logger.d(TAG, "channelCode:" + channelCode + " obj:" + obj);
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return channelCode;
-	}
-
-	/***
-	 * ¼ì²éÍøÂçÊÇ·ñ¿ÉÓÃ
-	 */
-	public static boolean isConnect(Context context) {
-		// »ñÈ¡ÊÖ»úËùÓÐÁ¬½Ó¹ÜÀí¶ÔÏó£¨°üÀ¨¶Ôwi-fi,netµÈÁ¬½ÓµÄ¹ÜÀí£©
-		try {
-			ConnectivityManager connectivity = (ConnectivityManager) context
-					.getSystemService(Context.CONNECTIVITY_SERVICE);
-			if (connectivity != null) {
-				// »ñÈ¡ÍøÂçÁ¬½Ó¹ÜÀíµÄ¶ÔÏó
-				NetworkInfo info = connectivity.getActiveNetworkInfo();
-				if (info != null && info.isConnected()) {
-					// ÅÐ¶Ïµ±Ç°ÍøÂçÊÇ·ñÒÑ¾­Á¬½Ó
-					if (info.getState() == NetworkInfo.State.CONNECTED) {
-						return true;
-					}
-				}
-			}
-		} catch (Exception e) {
-			Log.v("error", e.toString());
-		}
-		return false;
-	}
-
-	// Õâ¸öº¯Êý»á¶ÔÍ¼Æ¬µÄ´óÐ¡½øÐÐÅÐ¶Ï£¬²¢µÃµ½ºÏÊÊµÄËõ·Å±ÈÀý£¬±ÈÈç2¼´1/2,3¼´1/3
-	public static int computeSampleSize(BitmapFactory.Options options,
-			int minSideLength, int maxNumOfPixels) {
-		int initialSize = computeInitialSampleSize(options, minSideLength,
-				maxNumOfPixels);
-
-		int roundedSize;
-		if (initialSize <= 8) {
-			roundedSize = 1;
-			while (roundedSize < initialSize) {
-				roundedSize <<= 1;
-			}
-		} else {
-			roundedSize = (initialSize + 7) / 8 * 8;
-		}
-		return roundedSize;
-	}
-
-	private static int computeInitialSampleSize(BitmapFactory.Options options,
-			int minSideLength, int maxNumOfPixels) {
-		double w = options.outWidth;
-		double h = options.outHeight;
-
-		int lowerBound = (maxNumOfPixels == -1) ? 1 : (int) Math.ceil(Math
-				.sqrt(w * h / maxNumOfPixels));
-		int upperBound = (minSideLength == -1) ? 80 : (int) Math.min(
-				Math.floor(w / minSideLength), Math.floor(h / minSideLength));
-
-		if (upperBound < lowerBound) {
-			// return the larger one when there is no overlapping zone.
-			return lowerBound;
-		}
-
-		if ((maxNumOfPixels == -1) && (minSideLength == -1)) {
-			return 1;
-		} else if (minSideLength == -1) {
-			return lowerBound;
-		} else {
-			return upperBound;
-		}
-	}
-
-	/**
-	 * ¸ù¾ÝÍ¼Æ¬Ãû³ÆÉ¾³ýÍ¼Æ¬
-	 * 
-	 * @param fileName
-	 *            ÎÄ¼þÃû
-	 */
-	public void deletePictureByFilePath(final Context context,
-			final Handler handler, final String url) {
-
-		new Thread() {
-			@Override
-			public void run() {
-				if (url != null && !url.equals("")) {
-					// url×ª»»HashCode
-					String urlHashCode = convertUrlToFileName(url);
-
-					// PictureSDUtil myPictureSDUtil = new
-					// PictureSDUtil(context);
-					File file = new File(PathCommonDefines.MY_FAVOURITE_FOLDER,
-							urlHashCode + ".png");
-					if (file != null) {
-						file.delete();
-					}
-					Message message = new Message();
-					message.what = 2;
-					handler.sendMessage(message);
-
-				}
-			}
-		}.start();
-	}
-
-	/**
-	 * ¸ù¾ÝÍ¼Æ¬Ãû³Æ¿½±´Í¼Æ¬
-	 * 
-	 * @param fileName
-	 *            ÎÄ¼þÃû
-	 */
-	public void copyPictureByFilePath(final Handler handler, final String url) {
-
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-
-					if (url != null && !url.equals("")) {
-
-						// url×ª»»HashCode
-						String urlHashCode = convertUrlToFileName(url);
-
-						copyFile(urlHashCode, urlHashCode);
-
-						Message message = new Message();
-						message.what = 3;
-						handler.sendMessage(message);
-
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-
-			}
-		}.start();
-	}
-
-	/**
-	 * ÎÄ¼þµÄ¸´ÖÆ(´ÓÒ»¸öÎÄ¼þ¼Ð¸´ÖÆµ½ÐÂµÄÎÄ¼þ¼Ð)
-	 * 
-	 * @param sourceFile
-	 *            Ô´ÎÄ¼þ
-	 * @param targetFile
-	 *            Ä¿±êÎÄ¼þ
-	 */
-	public void copyFile(String filename, String urlHashCode)
-			throws IOException {
-
-		File myFavouriteFolder = new File(PathCommonDefines.MY_FAVOURITE_FOLDER);
-		if (!myFavouriteFolder.exists()) {
-			myFavouriteFolder.mkdirs();
-		}
-
-		// ÐÂ½¨ÎÄ¼þÊäÈëÁ÷²¢¶ÔËü½øÐÐ»º³å
-		FileInputStream input = new FileInputStream(
-				PathCommonDefines.PHOTOCACHE_FOLDER + File.separator
-						+ urlHashCode);
-		BufferedInputStream inBuff = new BufferedInputStream(input);
-
-		// ÐÂ½¨ÎÄ¼þÊä³öÁ÷²¢¶ÔËü½øÐÐ»º³å
-		FileOutputStream output = new FileOutputStream(
-				PathCommonDefines.MY_FAVOURITE_FOLDER + File.separator
-						+ filename);
-		BufferedOutputStream outBuff = new BufferedOutputStream(output);
-
-		// »º³åÊý×é
-		byte[] b = new byte[1024 * 5];
-		int len;
-		while ((len = inBuff.read(b)) != -1) {
-			outBuff.write(b, 0, len);
-		}
-		// Ë¢ÐÂ´Ë»º³åµÄÊä³öÁ÷
-		outBuff.flush();
-
-		// ¹Ø±ÕÁ÷
-		inBuff.close();
-		outBuff.close();
-		output.close();
-		input.close();
-	}
-
-	/**
-	 * ½«URL×ª»»³ÉHashCode
-	 * 
-	 * @param url
-	 * @return
-	 */
-	public String convertUrlToFileName(String url) {
-		String fn = null;
-		if (url != null && url.trim().length() > 0) {
-			if (url.contains(".png")) {
-
-				fn = String.valueOf(url.hashCode()) + ".png";
-
-			} else {
-
-				fn = String.valueOf(url.hashCode()) + ".jpg";
-
-			}
-		}
-		return fn;
-	}
-
-	/**
-	 * ÒÔmd5·½Ê½¼ÓÃÜ×Ö·û´®
-	 * 
-	 * @param content
-	 *            ×Ö·û´®
-	 * @param length
-	 *            ·µ»ØµÄ³¤¶È,Ö§³Ö16Î»ºÍ32Î»,Àýlength=16,length=32
-	 * @return ·µ»Ø¼ÓÃÜºóµÄ×Ö·û´®
-	 */
-	public static String getMd5(String content, int length) {
-		try {
-			MessageDigest bmd5 = MessageDigest.getInstance("MD5");
-			bmd5.update(content.getBytes());
-			int i;
-			StringBuffer buf = new StringBuffer();
-			byte[] b = bmd5.digest();
-			for (int offset = 0; offset < b.length; offset++) {
-				i = b[offset];
-				if (i < 0)
-					i += 256;
-				if (i < 16)
-					buf.append("0");
-				buf.append(Integer.toHexString(i));
-			}
-			String md5Content = buf.toString();
-			switch (length) {
-			case 16:
-				md5Content = md5Content.substring(0, 16);
-				break;
-			case 32:
-			default:
-				break;
-			}
-			return md5Content;
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		return "";
-	}
-
-	public ByteArrayOutputStream getByteArrayOutputStreamByInputStream(
-			InputStream inputStream) throws Exception {
-
-		byte[] buffer = new byte[1024];
-		int len = -1;
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		while ((len = inputStream.read(buffer)) != -1) {
-			byteArrayOutputStream.write(buffer, 0, len);
-		}
-		return byteArrayOutputStream;
-	}
+    private static final String TAG = HelperUtils.class.getSimpleName();
+    public static final int SINA_SHARE_SUCCESS = 10;
+    public static final int SINA_SHARE_ERROR = 11;
+    public static final int SINA_SHARE_EXCEPTION = 12;
+    public static final int TENCENT_SHARE_SUCCESS = 13;
+    public static final int TENCENT_SHARE_ERROR = 14;
+    public static final int QZONE_SHARE_SUCCESS = 18;
+    public static final int QZONE_SHARE_ERROR = 19;
+    public static final int TENCENT_SHARE_EXCEPTION = 15;
+    public static final int FAVORITE_IMAGE_SUCCESS = 16;
+    public static final int FAVORITE_IMAGE_FAILE = 17;
+
+    private static final String addr = "http://api.sms.cn/mt/";
+    private static final String userid = "userid=";
+
+    private static HelperUtils mInstance = null;
+
+    public static HelperUtils getInstance() {
+        if (mInstance == null) {
+            mInstance = new HelperUtils();
+        }
+        return mInstance;
+    }
+
+    public static String getNumberFromString(String str) {
+        String str2 = "";
+        if (str != null && !"".equals(str)) {
+            for (int i = 0; i < str.length(); i++) {
+                if (str.charAt(i) >= 48 && str.charAt(i) <= 57) {
+                    str2 += str.charAt(i);
+                }
+            }
+        }
+        return str2;
+    }
+
+
+    public static String send(String msg, String phone) throws Exception {
+        String massage = java.net.URLEncoder.encode(msg);
+        String pwdString = encryption("xianshisong31112501");
+        String straddr = addr + "?uid=31112501&pwd=" + pwdString + "&mobile="
+                + phone + "&encode=utf8&content=" + massage;
+        StringBuffer sb = new StringBuffer(straddr);
+        URL url = new URL(sb.toString());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                url.openStream()));
+        String inputline = in.readLine();
+        System.out.println(inputline);
+        return inputline;
+    }
+
+    /**
+     * ï¿½ï¿½È¡ï¿½ï¿½Ö¤ï¿½ï¿½
+     */
+    public static String read(String str) throws IOException {
+        File file = new File(str);
+        FileInputStream fis = new FileInputStream(file);
+        StringBuffer sb = new StringBuffer();
+
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        BufferedReader read = new BufferedReader(new InputStreamReader(bis));
+        int c = 0;
+        while ((c = read.read()) != -1) {
+            sb.append((char) c);
+        }
+        read.close();
+        bis.close();
+        fis.close();
+        Log.i(TAG, sb.toString());
+        String verify = sb.toString();
+        return verify;
+    }
+
+    /**
+     * ï¿½ï¿½È¡6Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     */
+    public static int getSixNum() {
+        int numcode = (int) ((Math.random() * 9 + 1) * 100000);
+        return numcode;
+    }
+
+    /**
+     * MD5ï¿½ï¿½ï¿½ï¿½
+     *
+     * @param enc
+     * @return
+     */
+    public static String encryption(String enc) {
+        String md5 = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] bs = enc.getBytes();
+            digest.update(bs);
+            md5 = byte2hex(digest.digest());
+            Log.i("md5", md5);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return md5;
+    }
+
+    private static String byte2hex(byte[] b) {
+        String hs = "";
+        String stmp = "";
+        for (int n = 0; n < b.length; n++) {
+            stmp = (java.lang.Integer.toHexString(b[n] & 0xFF));
+            if (stmp.length() == 1)
+                hs = hs + "0" + stmp;
+            else
+                hs = hs + stmp;
+        }
+        return hs;
+    }
+
+    /**
+     * ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
+     */
+    public static String getCurrentDate() {
+        final Calendar c = Calendar.getInstance();
+        int mYear = c.get(Calendar.YEAR); // ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½
+        int mMonth = c.get(Calendar.MONTH);// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½Â·ï¿½
+        int mDay = c.get(Calendar.DAY_OF_MONTH);// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½Â·Ýµï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½
+        return mYear + "-" + mMonth + "-" + mDay;
+    }
+
+    /**
+     * ï¿½ï¿½Ê½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½(ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Â·ï¿½ï¿½)
+     *
+     * @param filePath ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+     * @return ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+     */
+    public static String enCodeFilePath(String filePath) {
+        filePath = "file:" + filePath;
+        return filePath;
+    }
+
+    /**
+     * px to sp
+     *
+     * @param pxValue
+     * @param fontScale
+     * @return
+     */
+    public static int px2sp(float pxValue, Context context) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (pxValue / scale + 0.5f);
+    }
+
+    public static String unEnCodeFilePath(String filePath) {
+        if (filePath != null) {
+            filePath = filePath.replace("file:", "");
+        }
+        return filePath;
+    }
+
+    /**
+     * ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+     *
+     * @param filePath
+     * @return
+     */
+    public static boolean isFilePath(String filePath) {
+        if (filePath != null) {
+            if (filePath.contains("file:")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // ï¿½Ð¶ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð´ï¿½æ·¶
+    public static boolean emailFormat(String email) {
+        boolean tag = true;
+        final String pattern1 = "^([a-z0-9A-Z]+[-|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
+        final Pattern pattern = Pattern.compile(pattern1);
+        final Matcher mat = pattern.matcher(email);
+        if (!mat.find()) {
+            tag = false;
+        }
+        return tag;
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½SDCard
+     *
+     * @return
+     */
+    public static boolean hasSdcard() {
+        String state = Environment.getExternalStorageState();
+        if (state.equals(Environment.MEDIA_MOUNTED)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static int px2dip(Context context, float pxValue) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (pxValue / scale + 0.5f);
+    }
+
+    public static int dip2px(Context context, float dipValue) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dipValue * scale + 0.5f);
+    }
+
+
+    /**
+     * ï¿½ï¿½ï¿½Ã°ï¿½ï¿½ï¿½ï¿½Ò¹ï¿½ï¿½Ä£Ê½
+     *
+     * @param window       ï¿½ï¿½Ç°ï¿½ï¿½Windowï¿½ï¿½ï¿½ï¿½
+     * @param isNightModel ï¿½Ç·ï¿½ï¿½ï¿½Ò¹ï¿½ï¿½Ä£Ê½
+     */
+    public void setScreenBrightness(Window window, boolean isNightModel) {
+
+        WindowManager.LayoutParams lp = window.getAttributes();
+
+        if (isNightModel) {
+
+            lp.screenBrightness = 0.4f;
+
+        } else {
+
+            lp.screenBrightness = 1.0f;
+
+        }
+
+        window.setAttributes(lp);
+
+    }
+
+    /**
+     * ï¿½ï¿½Ê¾ï¿½ï¿½Ê¾(String)
+     *
+     * @param context
+     * @param msg
+     */
+    public void showToast(Context context, String msg) {
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * ï¿½ï¿½Ê¾ï¿½ï¿½Ê¾(resource id)
+     *
+     * @param context
+     * @param msg
+     */
+    public void showToast(Context context, int msg) {
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * ï¿½ï¿½×ªActivity
+     *
+     * @param context
+     * @param to
+     */
+    public static void jump(Context context, Class to) {
+        Intent intent = new Intent(context, to);
+        context.startActivity(intent);
+    }
+
+    /**
+     * ï¿½ï¿½Ö¤ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ ï¿½ï¿½ ""
+     *
+     * @param str
+     * @return
+     */
+    public static boolean validateString(String str) {
+        if (str != null && !"".equals(str.trim()))
+            return false;
+
+        return true;
+    }
+
+    /**
+     * ï¿½Ãµï¿½ï¿½æ±¾ï¿½ï¿½
+     *
+     * @return
+     */
+    public static String getVersionName(Context context) {
+        PackageInfo pinfo;
+        String versionName = "";
+        try {
+            pinfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(),
+                            PackageManager.GET_CONFIGURATIONS);
+            versionName = pinfo.versionName;
+
+        } catch (NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return versionName;
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½Æ¹ï¿½Æ½Ì¨0=ï¿½ï¿½Õ¾,1=ï¿½ï¿½ï¿½ï¿½,2=ï¿½ï¿½ï¿½ï¿½,3=ï¿½ï¿½×¿ï¿½Ù·ï¿½)
+     *
+     * @return
+     */
+    public static String getChannelCode(Context context) {
+        String channelCode = "0";
+        try {
+            ApplicationInfo ai = context.getPackageManager()
+                    .getApplicationInfo(context.getPackageName(),
+                            PackageManager.GET_META_DATA);
+            Bundle bundle = ai.metaData;
+            if (bundle != null) {
+
+                Object obj = bundle.get("UMENG_CHANNEL");
+                if (obj != null) {
+                    channelCode = obj.toString();
+                }
+                Logger.d(TAG, "channelCode:" + channelCode + " obj:" + obj);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return channelCode;
+    }
+
+    /***
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
+     */
+    public static boolean isConnect(Context context) {
+        // ï¿½ï¿½È¡ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½ï¿½ï¿½ó£¨°ï¿½ï¿½ï¿½ï¿½ï¿½wi-fi,netï¿½ï¿½ï¿½ï¿½ï¿½ÓµÄ¹ï¿½ï¿½ï¿½
+        try {
+            ConnectivityManager connectivity = (ConnectivityManager) context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivity != null) {
+                // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½
+                NetworkInfo info = connectivity.getActiveNetworkInfo();
+                if (info != null && info.isConnected()) {
+                    // ï¿½Ð¶Ïµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½
+                    if (info.getState() == NetworkInfo.State.CONNECTED) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.v("error", e.toString());
+        }
+        return false;
+    }
+
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½Ä´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï£ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½1/2,3ï¿½ï¿½1/3
+    public static int computeSampleSize(BitmapFactory.Options options,
+                                        int minSideLength, int maxNumOfPixels) {
+        int initialSize = computeInitialSampleSize(options, minSideLength,
+                maxNumOfPixels);
+
+        int roundedSize;
+        if (initialSize <= 8) {
+            roundedSize = 1;
+            while (roundedSize < initialSize) {
+                roundedSize <<= 1;
+            }
+        } else {
+            roundedSize = (initialSize + 7) / 8 * 8;
+        }
+        return roundedSize;
+    }
+
+    private static int computeInitialSampleSize(BitmapFactory.Options options,
+                                                int minSideLength, int maxNumOfPixels) {
+        double w = options.outWidth;
+        double h = options.outHeight;
+
+        int lowerBound = (maxNumOfPixels == -1) ? 1 : (int) Math.ceil(Math
+                .sqrt(w * h / maxNumOfPixels));
+        int upperBound = (minSideLength == -1) ? 80 : (int) Math.min(
+                Math.floor(w / minSideLength), Math.floor(h / minSideLength));
+
+        if (upperBound < lowerBound) {
+            // return the larger one when there is no overlapping zone.
+            return lowerBound;
+        }
+
+        if ((maxNumOfPixels == -1) && (minSideLength == -1)) {
+            return 1;
+        } else if (minSideLength == -1) {
+            return lowerBound;
+        } else {
+            return upperBound;
+        }
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½Í¼Æ¬
+     *
+     * @param fileName ï¿½Ä¼ï¿½ï¿½ï¿½
+     */
+    public void deletePictureByFilePath(final Context context,
+                                        final Handler handler, final String url) {
+
+        new Thread() {
+            @Override
+            public void run() {
+                if (url != null && !url.equals("")) {
+                    // url×ªï¿½ï¿½HashCode
+                    String urlHashCode = convertUrlToFileName(url);
+
+                    // PictureSDUtil myPictureSDUtil = new
+                    // PictureSDUtil(context);
+                    File file = new File(PathCommonDefines.MY_FAVOURITE_FOLDER,
+                            urlHashCode + ".png");
+                    if (file != null) {
+                        file.delete();
+                    }
+                    Message message = new Message();
+                    message.what = 2;
+                    handler.sendMessage(message);
+
+                }
+            }
+        }.start();
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½Í¼Æ¬
+     *
+     * @param fileName ï¿½Ä¼ï¿½ï¿½ï¿½
+     */
+    public void copyPictureByFilePath(final Handler handler, final String url) {
+
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+
+                    if (url != null && !url.equals("")) {
+
+                        // url×ªï¿½ï¿½HashCode
+                        String urlHashCode = convertUrlToFileName(url);
+
+                        copyFile(urlHashCode, urlHashCode);
+
+                        Message message = new Message();
+                        message.what = 3;
+                        handler.sendMessage(message);
+
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }.start();
+    }
+
+    /**
+     * ï¿½Ä¼ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½(ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ð¸ï¿½ï¿½Æµï¿½ï¿½Âµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½)
+     *
+     * @param sourceFile Ô´ï¿½Ä¼ï¿½
+     * @param targetFile Ä¿ï¿½ï¿½ï¿½Ä¼ï¿½
+     */
+    public void copyFile(String filename, String urlHashCode)
+            throws IOException {
+
+        File myFavouriteFolder = new File(PathCommonDefines.MY_FAVOURITE_FOLDER);
+        if (!myFavouriteFolder.exists()) {
+            myFavouriteFolder.mkdirs();
+        }
+
+        // ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½
+        FileInputStream input = new FileInputStream(
+                PathCommonDefines.PHOTOCACHE_FOLDER + File.separator
+                        + urlHashCode);
+        BufferedInputStream inBuff = new BufferedInputStream(input);
+
+        // ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½
+        FileOutputStream output = new FileOutputStream(
+                PathCommonDefines.MY_FAVOURITE_FOLDER + File.separator
+                        + filename);
+        BufferedOutputStream outBuff = new BufferedOutputStream(output);
+
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        byte[] b = new byte[1024 * 5];
+        int len;
+        while ((len = inBuff.read(b)) != -1) {
+            outBuff.write(b, 0, len);
+        }
+        // Ë¢ï¿½Â´Ë»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        outBuff.flush();
+
+        // ï¿½Ø±ï¿½ï¿½ï¿½
+        inBuff.close();
+        outBuff.close();
+        output.close();
+        input.close();
+    }
+
+    /**
+     * ï¿½ï¿½URL×ªï¿½ï¿½ï¿½ï¿½HashCode
+     *
+     * @param url
+     * @return
+     */
+    public String convertUrlToFileName(String url) {
+        String fn = null;
+        if (url != null && url.trim().length() > 0) {
+            if (url.contains(".png")) {
+
+                fn = String.valueOf(url.hashCode()) + ".png";
+
+            } else {
+
+                fn = String.valueOf(url.hashCode()) + ".jpg";
+
+            }
+        }
+        return fn;
+    }
+
+    /**
+     * ï¿½ï¿½md5ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+     *
+     * @param content ï¿½Ö·ï¿½ï¿½ï¿½
+     * @param length  ï¿½ï¿½ï¿½ØµÄ³ï¿½ï¿½ï¿½,Ö§ï¿½ï¿½16Î»ï¿½ï¿½32Î»,ï¿½ï¿½length=16,length=32
+     * @return ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½Üºï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+     */
+    public static String getMd5(String content, int length) {
+        try {
+            MessageDigest bmd5 = MessageDigest.getInstance("MD5");
+            bmd5.update(content.getBytes());
+            int i;
+            StringBuffer buf = new StringBuffer();
+            byte[] b = bmd5.digest();
+            for (int offset = 0; offset < b.length; offset++) {
+                i = b[offset];
+                if (i < 0)
+                    i += 256;
+                if (i < 16)
+                    buf.append("0");
+                buf.append(Integer.toHexString(i));
+            }
+            String md5Content = buf.toString();
+            switch (length) {
+                case 16:
+                    md5Content = md5Content.substring(0, 16);
+                    break;
+                case 32:
+                default:
+                    break;
+            }
+            return md5Content;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public ByteArrayOutputStream getByteArrayOutputStreamByInputStream(
+            InputStream inputStream) throws Exception {
+
+        byte[] buffer = new byte[1024];
+        int len = -1;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteArrayOutputStream.write(buffer, 0, len);
+        }
+        return byteArrayOutputStream;
+    }
 }

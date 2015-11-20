@@ -59,749 +59,743 @@ import com.listviewaddheader.utils.ScreenUtil.Screen;
 /**
  * This helper class download images from the Internet and binds those with the
  * provided ImageView.
- * 
+ * <p>
  * <p>
  * It requires the INTERNET permission, which should be added to your
  * application's manifest file.
  * </p>
- * 
+ * <p>
  * A local cache of downloaded images is maintained internally to improve
  * performance.
  */
 public class ImageDownloader {
-	private static final String TAG = ImageDownloader.class.getSimpleName();
-	private static final String DEFAULT_BITMAP_CACHE = "default_bitmap_cache";
+    private static final String TAG = ImageDownloader.class.getSimpleName();
+    private static final String DEFAULT_BITMAP_CACHE = "default_bitmap_cache";
 
-	private static final int HARD_CACHE_CAPACITY = 2;// »º´æÖÐBitmapÇ¿ÒýÓÃµÄ¸öÊý
-	private static final int SOFT_CACHE_CAPACITY = 4;// »º´æÖÐBitmapÈõÒýÓÃµÄ¸öÊý
-	private static final int TASK_CACHE_CAPACITY = 10;// »º´æÖÐTaskÈõÒýÓÃµÄ¸öÊý
-	private static final int DELAY_BEFORE_PURGE = 10 * 1000; // 30ÃëÇå¿ÕÒ»´Î»º´æ
-	private static final int IMAGEVIEW_DELAY_BEFORE_PURGE = 10 * 1000; // 20ÃëÇå¿ÕÒ»´ÎImageView»º´æ
-	public static final int PHOTO_LOADING_TYPE = 1;
-	public static final int ICON_LOADING_TYPE = 2;
-	private int mLoadingDefaultPicType = 1;
-	private ImageSDCacher mImageSDCacher;
-	private Context mContext;
-	private ExecutorService mExecutorService = null;
-	private boolean isImageViewCache = true;
-	private ScaleType mScaleType;
-	private Screen mScreen = null;
+    private static final int HARD_CACHE_CAPACITY = 2;// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BitmapÇ¿ï¿½ï¿½ï¿½ÃµÄ¸ï¿½ï¿½ï¿½
+    private static final int SOFT_CACHE_CAPACITY = 4;// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Bitmapï¿½ï¿½ï¿½ï¿½ï¿½ÃµÄ¸ï¿½ï¿½ï¿½
+    private static final int TASK_CACHE_CAPACITY = 10;// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Taskï¿½ï¿½ï¿½ï¿½ï¿½ÃµÄ¸ï¿½ï¿½ï¿½
+    private static final int DELAY_BEFORE_PURGE = 10 * 1000; // 30ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Î»ï¿½ï¿½ï¿½
+    private static final int IMAGEVIEW_DELAY_BEFORE_PURGE = 10 * 1000; // 20ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ImageViewï¿½ï¿½ï¿½ï¿½
+    public static final int PHOTO_LOADING_TYPE = 1;
+    public static final int ICON_LOADING_TYPE = 2;
+    private int mLoadingDefaultPicType = 1;
+    private ImageSDCacher mImageSDCacher;
+    private Context mContext;
+    private ExecutorService mExecutorService = null;
+    private boolean isImageViewCache = true;
+    private ScaleType mScaleType;
+    private Screen mScreen = null;
 
-	public ImageDownloader(Context context) {
-		mImageSDCacher = ImageSDCacher.getImageSDCacher();
-		mContext = context;
-		mScreen = ScreenUtil.getScreenPix(context);
-		mExecutorService = Executors.newFixedThreadPool(5);
-	}
+    public ImageDownloader(Context context) {
+        mImageSDCacher = ImageSDCacher.getImageSDCacher();
+        mContext = context;
+        mScreen = ScreenUtil.getScreenPix(context);
+        mExecutorService = Executors.newFixedThreadPool(5);
+    }
 
-	// Soft cache for bitmap kicked out of hard cache
-	public final static HashMap<String, SoftReference<Bitmap>> mSoftBitmapCache = new LinkedHashMap<String, SoftReference<Bitmap>>(
-			SOFT_CACHE_CAPACITY / 2) {
-		private static final long serialVersionUID = 1L;
+    // Soft cache for bitmap kicked out of hard cache
+    public final static HashMap<String, SoftReference<Bitmap>> mSoftBitmapCache = new LinkedHashMap<String, SoftReference<Bitmap>>(
+            SOFT_CACHE_CAPACITY / 2) {
+        private static final long serialVersionUID = 1L;
 
-		@Override
-		protected boolean removeEldestEntry(
-				java.util.Map.Entry<String, SoftReference<Bitmap>> eldest) {
-			// Logger.e(TAG, "SoftBitmapCache key:" + eldest.getKey()
-			// + " Bitmap size:" + eldest.getValue().get().getByteCount());
-			// Logger.e(TAG, "SoftBitmapCache size():" +
-			// mSoftBitmapCache.size());
-			if (size() > SOFT_CACHE_CAPACITY) {
-				System.gc();
-				return true;
-			} else
-				return false;
-		}
-	};
-	// Hard cache, with a fixed maximum capacity and a life duration
-	public static final HashMap<String, Bitmap> mHardBitmapCache = new LinkedHashMap<String, Bitmap>(
-			HARD_CACHE_CAPACITY / 2, 0.75f, true) {
-		private static final long serialVersionUID = 1L;
+        @Override
+        protected boolean removeEldestEntry(
+                java.util.Map.Entry<String, SoftReference<Bitmap>> eldest) {
+            // Logger.e(TAG, "SoftBitmapCache key:" + eldest.getKey()
+            // + " Bitmap size:" + eldest.getValue().get().getByteCount());
+            // Logger.e(TAG, "SoftBitmapCache size():" +
+            // mSoftBitmapCache.size());
+            if (size() > SOFT_CACHE_CAPACITY) {
+                System.gc();
+                return true;
+            } else
+                return false;
+        }
+    };
+    // Hard cache, with a fixed maximum capacity and a life duration
+    public static final HashMap<String, Bitmap> mHardBitmapCache = new LinkedHashMap<String, Bitmap>(
+            HARD_CACHE_CAPACITY / 2, 0.75f, true) {
+        private static final long serialVersionUID = 1L;
 
-		@Override
-		protected boolean removeEldestEntry(
-				LinkedHashMap.Entry<String, Bitmap> eldest) {
-			// Logger.e(TAG, "HardBitmapCache key:" + eldest.getKey()
-			// + " Bitmap size:" + eldest.getValue().getByteCount());
-			// Logger.e(TAG, "HardBitmapCache size():" +
-			// mSoftBitmapCache.size());
+        @Override
+        protected boolean removeEldestEntry(
+                LinkedHashMap.Entry<String, Bitmap> eldest) {
+            // Logger.e(TAG, "HardBitmapCache key:" + eldest.getKey()
+            // + " Bitmap size:" + eldest.getValue().getByteCount());
+            // Logger.e(TAG, "HardBitmapCache size():" +
+            // mSoftBitmapCache.size());
 
-			if (size() > HARD_CACHE_CAPACITY) {
+            if (size() > HARD_CACHE_CAPACITY) {
 
-				// Èç¹ûÇ¿ÒýÓÃµÄ»º´æÊýÁ¿³¬¹ýÁË¹æ¶¨µÄÁ¿,Ôò×ª´æµ½ÈíÒýÓÃÖÐ,±ÜÃâÄÚ´æÊ¹ÓÃ¹ý¶à
-				mSoftBitmapCache.put(eldest.getKey(),
-						new SoftReference<Bitmap>(eldest.getValue()));
+                // ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ÃµÄ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¹æ¶¨ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½×ªï¿½æµ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ê¹ï¿½Ã¹ï¿½ï¿½ï¿½
+                mSoftBitmapCache.put(eldest.getKey(),
+                        new SoftReference<Bitmap>(eldest.getValue()));
 
-				return true;
-			} else
-				return false;
-		}
-	};
+                return true;
+            } else
+                return false;
+        }
+    };
 
-	// Task cache for bitmap kicked out of hard cache
-	// public final static HashMap<String, BitmapDownloaderTask>
-	// mBitmapDownloaderTaskCache = new LinkedHashMap<String,
-	// BitmapDownloaderTask>() {
-	// protected boolean removeEldestEntry(
-	// java.util.Map.Entry<String, BitmapDownloaderTask> eldest) {
-	// if (size() > TASK_CACHE_CAPACITY) {
-	// BitmapDownloaderTask task = eldest.getValue();
-	// if (!task.isCancelled()) {
-	// task.cancel(true);
-	// }
-	// return true;
-	// } else
-	// return false;
-	// };
-	// };
+    // Task cache for bitmap kicked out of hard cache
+    // public final static HashMap<String, BitmapDownloaderTask>
+    // mBitmapDownloaderTaskCache = new LinkedHashMap<String,
+    // BitmapDownloaderTask>() {
+    // protected boolean removeEldestEntry(
+    // java.util.Map.Entry<String, BitmapDownloaderTask> eldest) {
+    // if (size() > TASK_CACHE_CAPACITY) {
+    // BitmapDownloaderTask task = eldest.getValue();
+    // if (!task.isCancelled()) {
+    // task.cancel(true);
+    // }
+    // return true;
+    // } else
+    // return false;
+    // };
+    // };
 
-	/**
-	 * Download the specified image from the Internet and binds it to the
-	 * provided ImageView. The binding is immediate if the image is found in the
-	 * cache and will be done asynchronously otherwise. A null bitmap will be
-	 * associated to the ImageView if an error occurs.
-	 * 
-	 * @param url
-	 *            The URL of the image to download.
-	 * @param imageView
-	 *            The ImageView to bind the downloaded image to.
-	 */
-	// public void download(String url, ImageView imageView) {
-	// Logger.d(TAG, "prepare to download url " + url);
-	// download(url, imageView, null);
-	// }
+    /**
+     * Download the specified image from the Internet and binds it to the
+     * provided ImageView. The binding is immediate if the image is found in the
+     * cache and will be done asynchronously otherwise. A null bitmap will be
+     * associated to the ImageView if an error occurs.
+     *
+     * @param url
+     *            The URL of the image to download.
+     * @param imageView
+     *            The ImageView to bind the downloaded image to.
+     */
+    // public void download(String url, ImageView imageView) {
+    // Logger.d(TAG, "prepare to download url " + url);
+    // download(url, imageView, null);
+    // }
 
-	/**
-	 * ÖØÔØ,¿ÉÒÔ¸ù¾Ý¸ø¶¨µÄÌØÊâÀàÐÍ,ÏÔÊ¾ÌØ¶¨µÄÄ¬ÈÏÍ¼Æ¬
-	 * 
-	 * @param url
-	 * @param imageView
-	 * @param defaultPicType
-	 *            Ä¬ÈÏÍ¼Æ¬ÀàÐÍ
-	 */
-	public void download(String url, ImageView imageView, int defaultPicType) {
-		// Logger.d(TAG, "¿ªÊ¼µ÷ÓÃÏÂÔØ·½·¨:" + System.currentTimeMillis());
-		// Logger.d(TAG, "prepare to download url " + url);
-		mLoadingDefaultPicType = defaultPicType;
-		download(url, imageView, null, defaultPicType);
-		// Logger.d(TAG, "½áÊøµ÷ÓÃÏÂÔØ·½·¨:" + System.currentTimeMillis());
-	}
+    /**
+     * ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Ê¾ï¿½Ø¶ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Í¼Æ¬
+     *
+     * @param url
+     * @param imageView
+     * @param defaultPicType Ä¬ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½
+     */
+    public void download(String url, ImageView imageView, int defaultPicType) {
+        // Logger.d(TAG, "ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½:" + System.currentTimeMillis());
+        // Logger.d(TAG, "prepare to download url " + url);
+        mLoadingDefaultPicType = defaultPicType;
+        download(url, imageView, null, defaultPicType);
+        // Logger.d(TAG, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½:" + System.currentTimeMillis());
+    }
 
-	public void download(String url, ImageView imageView, ScaleType scaleType,
-			boolean isDownload) {
+    public void download(String url, ImageView imageView, ScaleType scaleType,
+                         boolean isDownload) {
 
-		if (isDownload) {
+        if (isDownload) {
 
-			download(url, imageView, scaleType);
+            download(url, imageView, scaleType);
 
-		} else {
+        } else {
 
-			if (scaleType != null) {
+            if (scaleType != null) {
 
-				imageView.setScaleType(scaleType);
+                imageView.setScaleType(scaleType);
 
-			}
+            }
 
-			imageView.setImageBitmap(getDefaultBitmap(mContext));
+            imageView.setImageBitmap(getDefaultBitmap(mContext));
 
-		}
+        }
 
-	}
+    }
 
-	public void download(String url, ImageView imageView, ScaleType scaleType) {
-		mScaleType = scaleType;
-		download(url, imageView, 0);
-	}
+    public void download(String url, ImageView imageView, ScaleType scaleType) {
+        mScaleType = scaleType;
+        download(url, imageView, 0);
+    }
 
-	/**
-	 * Same as {@link #download(String, ImageView)}, with the possibility to
-	 * provide an additional cookie that will be used when the image will be
-	 * retrieved.
-	 * 
-	 * @param url
-	 *            The URL of the image to download.
-	 * @param imageView
-	 *            The ImageView to bind the downloaded image to.
-	 * @param cookie
-	 *            A cookie String that will be used by the http connection.
-	 */
-	public void download(String url, ImageView imageView, String cookie,
-			int defaultPicType) {
+    /**
+     * Same as {@link #download(String, ImageView)}, with the possibility to
+     * provide an additional cookie that will be used when the image will be
+     * retrieved.
+     *
+     * @param url       The URL of the image to download.
+     * @param imageView The ImageView to bind the downloaded image to.
+     * @param cookie    A cookie String that will be used by the http connection.
+     */
+    public void download(String url, ImageView imageView, String cookie,
+                         int defaultPicType) {
 
-		// Logger.i(TAG, "download url:" + url);
+        // Logger.i(TAG, "download url:" + url);
 
-		// Òì²½ÇåÀíÈíÒýÓÃºÍÇ¿ÒýÓÃ
-		resetPurgeTimer();
+        // ï¿½ì²½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½Ç¿ï¿½ï¿½ï¿½ï¿½
+        resetPurgeTimer();
 
-		// Logger.d(TAG, "»º´æ¿ªÊ¼Ê±¼ä:" + System.currentTimeMillis());
-		Bitmap bitmap = getBitmapFromCache(url);// »º´æ
-		// Logger.d(TAG, "»º´æ½áÊøÊ±¼ä:" + System.currentTimeMillis());
+        // Logger.d(TAG, "ï¿½ï¿½ï¿½æ¿ªÊ¼Ê±ï¿½ï¿½:" + System.currentTimeMillis());
+        Bitmap bitmap = getBitmapFromCache(url);// ï¿½ï¿½ï¿½ï¿½
+        // Logger.d(TAG, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½:" + System.currentTimeMillis());
 
-		if (bitmap == null) {
-			// Logger.d(TAG, "get image from SD card:" +
-			// System.currentTimeMillis());
-			bitmap = loadFromSDCache(url);// SD¿¨+
-			// Logger.d(TAG, "SD¿¨½áÊøÊ±¼ä:" + System.currentTimeMillis());
-		}
+        if (bitmap == null) {
+            // Logger.d(TAG, "get image from SD card:" +
+            // System.currentTimeMillis());
+            bitmap = loadFromSDCache(url);// SDï¿½ï¿½+
+            // Logger.d(TAG, "SDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½:" + System.currentTimeMillis());
+        }
 
-		// else{
-		// Logger.d(TAG, "get image from cache:" + System.currentTimeMillis());
-		// }
-		if (bitmap == null) {
-			// Logger.d(TAG, "get image from network:" +
-			// System.currentTimeMillis());
-			forceDownload(url, imageView, cookie, defaultPicType);// ÍøÂç
-			// Logger.d(TAG, "ÍøÂç½áÊøÊ±¼ä:" + System.currentTimeMillis());
-		} else {
-			// Logger.d(TAG,
-			// "got image from SD card, cancel potential download:" +
-			// System.currentTimeMillis());
-			if (imageView != null) {
-				cancelPotentialDownload(url, imageView);
-			}
+        // else{
+        // Logger.d(TAG, "get image from cache:" + System.currentTimeMillis());
+        // }
+        if (bitmap == null) {
+            // Logger.d(TAG, "get image from network:" +
+            // System.currentTimeMillis());
+            forceDownload(url, imageView, cookie, defaultPicType);// ï¿½ï¿½ï¿½ï¿½
+            // Logger.d(TAG, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½:" + System.currentTimeMillis());
+        } else {
+            // Logger.d(TAG,
+            // "got image from SD card, cancel potential download:" +
+            // System.currentTimeMillis());
+            if (imageView != null) {
+                cancelPotentialDownload(url, imageView);
+            }
 
-			// Áô×÷±¸ÓÃ,·Å´óËõÐ¡Í¼Æ¬Ê±»áÓÃµ½
-			// if (imageView instanceof MulitPointTouchImageView) {
-			// ((MulitPointTouchImageView) imageView).setImageBitmap(bitmap);
-			// } else {
-			// imageView.setImageBitmap(bitmap);// ÉèÖÃ
-			// }
-			if (mScaleType != null && imageView != null) {
-				imageView.setScaleType(mScaleType);
-			}
-			if (imageView != null) {
-				imageView.setImageBitmap(bitmap);// ÉèÖÃ
-			}
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½Å´ï¿½ï¿½ï¿½Ð¡Í¼Æ¬Ê±ï¿½ï¿½ï¿½Ãµï¿½
+            // if (imageView instanceof MulitPointTouchImageView) {
+            // ((MulitPointTouchImageView) imageView).setImageBitmap(bitmap);
+            // } else {
+            // imageView.setImageBitmap(bitmap);// ï¿½ï¿½ï¿½ï¿½
+            // }
+            if (mScaleType != null && imageView != null) {
+                imageView.setScaleType(mScaleType);
+            }
+            if (imageView != null) {
+                imageView.setImageBitmap(bitmap);// ï¿½ï¿½ï¿½ï¿½
+            }
 
-			// if (isImageViewCache) {
-			// mImageViewCache.put(url, imageView);
-			// }
+            // if (isImageViewCache) {
+            // mImageViewCache.put(url, imageView);
+            // }
 
-		}
+        }
 
-		// Log
-		// Collection<Bitmap> hardValues = mHardBitmapCache.values();
-		// int hardTotalSize = 0;
-		// for (Bitmap hartbitmap : hardValues) {
-		//
-		// hardTotalSize += (hartbitmap.getHeight() * hartbitmap.getWidth() * 4)
-		// / 1024;
-		// Logger.d(TAG, "hartbitmap Height:" + hartbitmap.getHeight()
-		// + "hartbitmap Width:" + hartbitmap.getWidth());
-		// }
+        // Log
+        // Collection<Bitmap> hardValues = mHardBitmapCache.values();
+        // int hardTotalSize = 0;
+        // for (Bitmap hartbitmap : hardValues) {
+        //
+        // hardTotalSize += (hartbitmap.getHeight() * hartbitmap.getWidth() * 4)
+        // / 1024;
+        // Logger.d(TAG, "hartbitmap Height:" + hartbitmap.getHeight()
+        // + "hartbitmap Width:" + hartbitmap.getWidth());
+        // }
 
-		// Collection<SoftReference<Bitmap>> softValues = mSoftBitmapCache
-		// .values();
-		// int softTotalSize = 0;
-		// for (SoftReference<Bitmap> softbitmap : softValues) {
-		//
-		// if (softbitmap != null && softbitmap.get() != null) {
-		// softTotalSize += (softbitmap.get().getHeight()
-		// * softbitmap.get().getWidth() * 4) / 1024;
-		// Logger.d(TAG, "softbitmap Height:"
-		// + softbitmap.get().getHeight() + "softbitmap Width:"
-		// + softbitmap.get().getWidth());
-		// }
-		//
-		// }
-		// Logger.d(TAG, "»º´æÈÝÁ¿==>download() bitmap Ò»¼¶»º´æÈÝÁ¿:" + hardTotalSize
-		// + "KB ¶þ¼¶»º´æÈÝÁ¿:" + softTotalSize + "KB");
-	}
+        // Collection<SoftReference<Bitmap>> softValues = mSoftBitmapCache
+        // .values();
+        // int softTotalSize = 0;
+        // for (SoftReference<Bitmap> softbitmap : softValues) {
+        //
+        // if (softbitmap != null && softbitmap.get() != null) {
+        // softTotalSize += (softbitmap.get().getHeight()
+        // * softbitmap.get().getWidth() * 4) / 1024;
+        // Logger.d(TAG, "softbitmap Height:"
+        // + softbitmap.get().getHeight() + "softbitmap Width:"
+        // + softbitmap.get().getWidth());
+        // }
+        //
+        // }
+        // Logger.d(TAG, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½==>download() bitmap Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:" + hardTotalSize
+        // + "KB ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:" + softTotalSize + "KB");
+    }
 
-	/**
-	 * get bitmap by local image
-	 * 
-	 * @param url
-	 * @return
-	 */
-	public Bitmap loadFromSDCache(String url) {
+    /**
+     * get bitmap by local image
+     *
+     * @param url
+     * @return
+     */
+    public Bitmap loadFromSDCache(String url) {
 
-		// ´ÓÆÕÍ¨Í¼Æ¬»º´æÈ¡bitmap
-		Bitmap bitmap = mImageSDCacher.getBitmapByCachePath(url,
-				PathCommonDefines.PHOTOCACHE_FOLDER);
+        // ï¿½ï¿½ï¿½ï¿½Í¨Í¼Æ¬ï¿½ï¿½ï¿½ï¿½È¡bitmap
+        Bitmap bitmap = mImageSDCacher.getBitmapByCachePath(url,
+                PathCommonDefines.PHOTOCACHE_FOLDER);
 
-		if (bitmap == null) {
+        if (bitmap == null) {
 
-			// ´ÓÎÒµÄÊÕ²Ø»º´æÈ¡bitmap
-			bitmap = mImageSDCacher.getBitmapByCachePath(url,
-					PathCommonDefines.MY_FAVOURITE_FOLDER);
+            // ï¿½ï¿½ï¿½Òµï¿½ï¿½Õ²Ø»ï¿½ï¿½ï¿½È¡bitmap
+            bitmap = mImageSDCacher.getBitmapByCachePath(url,
+                    PathCommonDefines.MY_FAVOURITE_FOLDER);
 
-		}
+        }
 
-		if (bitmap != null) {
+        if (bitmap != null) {
 
-			// Add to RAM cache
-			synchronized (mHardBitmapCache) {
-				mHardBitmapCache.put(url, bitmap);
-				Logger.d(TAG, "");
-			}
-		}
-		return bitmap;
-	}
+            // Add to RAM cache
+            synchronized (mHardBitmapCache) {
+                mHardBitmapCache.put(url, bitmap);
+                Logger.d(TAG, "");
+            }
+        }
+        return bitmap;
+    }
 
-	/**
-	 * Returns true if the current download has been canceled or if there was no
-	 * download in progress on this image view. Returns false if the download in
-	 * progress deals with the same url. The download is not stopped in that
-	 * case.
-	 */
-	private static boolean cancelPotentialDownload(String url,
-			ImageView imageView) {
+    /**
+     * Returns true if the current download has been canceled or if there was no
+     * download in progress on this image view. Returns false if the download in
+     * progress deals with the same url. The download is not stopped in that
+     * case.
+     */
+    private static boolean cancelPotentialDownload(String url,
+                                                   ImageView imageView) {
 
-		BitmapDownloaderTask bitmapDownloaderTask = getBitmapDownloaderTask(imageView);
+        BitmapDownloaderTask bitmapDownloaderTask = getBitmapDownloaderTask(imageView);
 
-		if (bitmapDownloaderTask != null) {
-			String bitmapUrl = bitmapDownloaderTask.url;
-			if ((bitmapUrl == null) || (!bitmapUrl.equals(url))) {
-				bitmapDownloaderTask.cancel(true);
-			} else {
-				// The same URL is already being downloaded.
-				return false;
-			}
-		}
+        if (bitmapDownloaderTask != null) {
+            String bitmapUrl = bitmapDownloaderTask.url;
+            if ((bitmapUrl == null) || (!bitmapUrl.equals(url))) {
+                bitmapDownloaderTask.cancel(true);
+            } else {
+                // The same URL is already being downloaded.
+                return false;
+            }
+        }
 
-		// mBitmapDownloaderTaskCache.remove(url);
+        // mBitmapDownloaderTaskCache.remove(url);
 
-		return true;
-	}
+        return true;
+    }
 
 	/*
-	 * Same as download but the image is always downloaded and the cache is not
+     * Same as download but the image is always downloaded and the cache is not
 	 * used. Kept private at the moment as its interest is not clear. private
 	 * void forceDownload(String url, ImageView view) { forceDownload(url, view,
 	 * null); }
 	 */
 
-	/**
-	 * Same as download but the image is always downloaded and the cache is not
-	 * used. Kept private at the moment as its interest is not clear.
-	 */
-	private void forceDownload(String url, ImageView imageView, String cookie,
-			int defaultPicType) {
-		try {
-
-			// State sanity: url is guaranteed to never be null in
-			if (url == null && imageView != null) {
-				// ÉèÖÃÄ¬ÈÏÍ¼Æ¬
-				imageView.setImageBitmap(getDefaultBitmap(mContext));
-				return;
-			}
-
-			if (cancelPotentialDownload(url, imageView)) {
-
-				// mBitmapDownloaderTaskCache.remove(url);
-
-				BitmapDownloaderTask task = new BitmapDownloaderTask(imageView);
-
-				DownloadedDrawable downloadedDrawable = new DownloadedDrawable(
-						task, mContext, defaultPicType);
-
-				// imageView.setImageDrawable(downloadedDrawable);
-
-				imageView.setTag(downloadedDrawable);
-
-				task.execute(url, cookie);
-
-				// Ã¿´´½¨Ò»¸öÏß³Ì¾Í¼ÓÈëµ½»º´æÖÐ
-				// mBitmapDownloaderTaskCache.put(url, task);
-			}
-
-		} catch (RejectedExecutionException localRejectedExecutionException) {
-			Logger.w(TAG, "localRejectedExecutionException");
-		}
-	}
-
-	private final Handler purgeHandler = new Handler();
-
-	private final Runnable purger = new Runnable() {
-		@Override
-		public void run() {
-			clearCache();
-		}
-	};
-
-	/**
-	 * Clears the image cache used internally to improve performance. Note that
-	 * for memory efficiency reasons, the cache will automatically be cleared
-	 * after a certain inactivity delay.
-	 */
-	public void clearCache() {
-		mHardBitmapCache.clear();
-		mSoftBitmapCache.clear();
-
-	}
-
-	private void resetPurgeTimer() {
-		purgeHandler.removeCallbacks(purger);
-		purgeHandler.postDelayed(purger, DELAY_BEFORE_PURGE);
-	}
-
-	/**
-	 * @param imageView
-	 *            Any imageView
-	 * @return Retrieve the currently active download task (if any) associated
-	 *         with this imageView. null if there is no such task.
-	 */
-	private static BitmapDownloaderTask getBitmapDownloaderTask(
-			ImageView imageView) {
-		if (imageView != null) {
-			Object objDrawable = imageView.getTag();
-			if (objDrawable != null
-					&& objDrawable instanceof DownloadedDrawable) {
-				DownloadedDrawable downloadedDrawable = (DownloadedDrawable) objDrawable;
-				return downloadedDrawable.getBitmapDownloaderTask();
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * @param url
-	 *            The URL of the image that will be retrieved from the cache.
-	 * @return The cached bitmap or null if it was not found.
-	 */
-	public Bitmap getBitmapFromCache(String url) {
-		if (url == null || url.length() == 0)
-			return null;
-		// First try the hard reference cache
-		synchronized (mHardBitmapCache) {
-			final Bitmap bitmap = mHardBitmapCache.get(url);
-			if (bitmap != null) {
-				// Bitmap found in hard cache
-				// Move element to first position, so that it is removed last
-				mHardBitmapCache.remove(url);
-				mHardBitmapCache.put(url, bitmap);
-				// Logger.d(
-				// "ImageDownloader",
-				// "RAM HardReference Cache==>" + "Heap:"
-				// + (Debug.getNativeHeapSize() / 1024) + "KB "
-				// + "FreeHeap:"
-				// + (Debug.getNativeHeapFreeSize() / 1024)
-				// + "KB " + "AllHeap:"
-				// + (Debug.getNativeHeapAllocatedSize() / 1024)
-				// + "KB" + " url:" + url);
-				return bitmap;
-			}
-		}
-
-		// Then try the soft reference cache
-		SoftReference<Bitmap> bitmapReference = mSoftBitmapCache.get(url);
-		if (bitmapReference != null) {
-			final Bitmap bitmap = bitmapReference.get();
-			if (bitmap != null) {
-				// Bitmap found in soft cache
-				// Logger.d(
-				// "ImageDownloader",
-				// "RAM SoftReference Cache==>" + "Heap:"
-				// + (Debug.getNativeHeapSize() / 1024) + "KB "
-				// + "FreeHeap:"
-				// + (Debug.getNativeHeapFreeSize() / 1024)
-				// + "KB " + "AllHeap:"
-				// + (Debug.getNativeHeapAllocatedSize() / 1024)
-				// + "KB" + " url:" + url);
-				return bitmap;
-			} else {
-				// Soft reference has been Garbage Collected
-				mSoftBitmapCache.remove(url);
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * ·µ»ØÄ¬ÈÏµÄ¼ÓÔØÍ¼Æ¬
-	 * 
-	 * @param context
-	 * @param defaultPicType
-	 * @return
-	 */
-	private Bitmap getDefaultBitmap(Context context) {
-
-		// ´´½¨Í¼Æ¬µÄBitmap
-		Bitmap defaultBitmap = getBitmapByResId(context,
-				R.drawable.ic_launcher, DEFAULT_BITMAP_CACHE);
-		// Bitmap defaultBitmap = null;
-
-		// ·µ»ØÄ¬ÈÏÍ¼Æ¬µÄBitmap
-		return defaultBitmap;
-	}
-
-	/**
-	 * The actual AsyncTask that will asynchronously download the image.
-	 */
-	class BitmapDownloaderTask extends AsyncTask<String, Void, Bitmap> {
-		private static final int IO_BUFFER_SIZE = 4 * 1024;
-		private String url;
-		private final WeakReference<ImageView> imageViewReference;
-
-		public BitmapDownloaderTask(ImageView imageView) {
-			imageViewReference = new WeakReference<ImageView>(imageView);
-		}
-
-		@Override
-		protected void onPreExecute() {
-			// TODO Auto-generated method stub
-			super.onPreExecute();
-		}
-
-		/**
-		 * Actual download method.
-		 */
-		@Override
-		protected Bitmap doInBackground(String... params) {
-			// »ñµÃURL
-			url = params[0];
-
-			Bitmap bitmap = null;
-
-			// È¥ÍøÂç¶ËÈ¡Í¼Æ¬
-			try {
-
-				URL httpUrl = new URL(url);
-
-				HttpURLConnection httpURLConnection = (HttpURLConnection) httpUrl
-						.openConnection();
-
-				httpURLConnection.setDoInput(true);
-
-				httpURLConnection.connect();
-
-				int statusCode = httpURLConnection.getResponseCode();
-				if (statusCode != HttpStatus.SC_OK) {
-					Logger.w("ImageDownloader", "Error " + statusCode
-							+ " while retrieving bitmap from " + url);
-					return null;
-				}
-
-				InputStream inputStream = null;
-				OutputStream outputStream = null;
-				try {
-
-					inputStream = httpURLConnection.getInputStream();
-					final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-					outputStream = new BufferedOutputStream(
-							byteArrayOutputStream, IO_BUFFER_SIZE);
-
-					copy(inputStream, outputStream);
-
-					outputStream.flush();
-
-					// Logger.d(
-					// TAG,
-					// "Before download decodeStream==>"
-					// + "Heap:"
-					// + (Debug.getNativeHeapSize() / 1024)
-					// + "KB "
-					// + "FreeHeap:"
-					// + (Debug.getNativeHeapFreeSize() / 1024)
-					// + "KB "
-					// + "AllocatedHeap:"
-					// + (Debug.getNativeHeapAllocatedSize() / 1024)
-					// + "KB" + " url:" + url);
-
-					boolean isJpg = url.contains(".jpg");
-
-					bitmap = BitmapTool.saveZoomBitmapToSDCard(
-							byteArrayOutputStream, mScreen, url,
-							PathCommonDefines.PHOTOCACHE_FOLDER, isJpg);
-
-					// Logger.d(
-					// TAG,
-					// "doInbackground bitmap width:"
-					// + bitmap.getWidth() + " height:"
-					// + bitmap.getHeight());
-
-					// Logger.d(
-					// TAG,
-					// "After download decodeStream==>"
-					// + "Heap:"
-					// + (Debug.getNativeHeapSize() / 1024)
-					// + "KB "
-					// + "FreeHeap:"
-					// + (Debug.getNativeHeapFreeSize() / 1024)
-					// + "KB "
-					// + "AllocatedHeap:"
-					// + (Debug.getNativeHeapAllocatedSize() / 1024)
-					// + "KB" + " url:" + url);
-
-					// if (client != null) {
-					// client.close();
-					// }
-					return bitmap;
-				} finally {
-					if (inputStream != null) {
-						inputStream.close();
-					}
-					if (outputStream != null) {
-						outputStream.close();
-					}
-				}
-				// }
-			} catch (IOException e) {
-				// getRequest.abort();
-				Logger.w(TAG, "I/O error while retrieving bitmap from " + url,
-						e);
-			} catch (IllegalStateException e) {
-				// getRequest.abort();
-				Logger.w(TAG, "Incorrect URL: " + url);
-			} catch (Exception e) {
-				// getRequest.abort();
-				Logger.w(TAG, "Error while retrieving bitmap from " + url, e);
-			} catch (OutOfMemoryError e) {
-				// TODO: handle exception
-			} finally {
-
-			}
-
-			return null;
-
-		}
-
-		/**
-		 * Once the image is downloaded, associates it to the imageView
-		 */
-		@Override
-		protected void onPostExecute(Bitmap bitmap) {
-			if (isCancelled()) {
-				bitmap = null;
-			}
-
-			// Logger.d("ImageDownloader", "¿ªÊ¼±£´æÏÂÔØµÄÍ¼Æ¬");
-			// Add bitmap to cache
-			if (bitmap != null) {
-				synchronized (mHardBitmapCache) {
-					mHardBitmapCache.put(url, bitmap);
-				}
-			}
-			// Logger.d("ImageDownloader", "½áÊø±£´æÏÂÔØµÄÍ¼Æ¬");
-
-			if (imageViewReference != null) {
-				ImageView imageView = imageViewReference.get();
-				BitmapDownloaderTask bitmapDownloaderTask = getBitmapDownloaderTask(imageView);
-				// Change bitmap only if this process is still associated with
-				// it
-				if (this == bitmapDownloaderTask && bitmap != null) {
-
-					// if (imageView instanceof MulitPointTouchImageView) {
-					// // ((MulitPointTouchImageView) imageView)
-					// // .setImageBitmap(bitmap);
-					// } else {
-					// imageView.setImageBitmap(bitmap);// ÉèÖÃ
-					// }
-					if (mScaleType != null) {
-
-						imageView.setScaleType(mScaleType);
-
-					}
-					imageView.setImageBitmap(bitmap);// ÉèÖÃ
-
-					// if (isImageViewCache) {
-					// mImageViewCache.put(url, imageView);
-					// }
-				}
-			}
-		}
-
-		public void copy(InputStream in, OutputStream out) throws IOException {
-			byte[] b = new byte[IO_BUFFER_SIZE];
-			int read;
-			while ((read = in.read(b)) != -1) {
-				out.write(b, 0, read);
-			}
-		}
-	}
-
-	/**
-	 * A fake Drawable that will be attached to the imageView while the download
-	 * is in progress.
-	 * 
-	 * <p>
-	 * Contains a reference to the actual download task, so that a download task
-	 * can be stopped if a new binding is required, and makes sure that only the
-	 * last started download process can bind its result, independently of the
-	 * download finish order.
-	 * </p>
-	 */
-	class DownloadedDrawable extends BitmapDrawable {
-		private final WeakReference<BitmapDownloaderTask> bitmapDownloaderTaskReference;
-
-		public DownloadedDrawable(BitmapDownloaderTask bitmapDownloaderTask,
-				Context context, int defaultPicType) {
-			// super();
-			super(context.getResources(), getDefaultBitmap(context));//
-			// ´ËÎ»ÖÃ¿ÉÒÔ¸Ä±äÍ¼Æ¬µÄ±³¾°ÑÕÉ«----ÍõÑô
-			bitmapDownloaderTaskReference = new WeakReference<BitmapDownloaderTask>(
-					bitmapDownloaderTask);
-		}
-
-		public BitmapDownloaderTask getBitmapDownloaderTask() {
-			return bitmapDownloaderTaskReference.get();
-		}
-
-	}
-
-	/**
-	 * ¸ù¾ÝÍ¼Æ¬µÄ×ÊÔ´ID´´½¨Bitmap
-	 * 
-	 * @param context
-	 * @param resId
-	 * @return
-	 */
-	public Bitmap getBitmapByResId(Context context, int resId, String cacheKey) {
-
-		// ´Ó»º´æÖÐÈ¡Ä¬ÈÏÍ¼Æ¬
-		Bitmap resBitmap = mHardBitmapCache.get(cacheKey);
-		try {
-			if (resBitmap == null) {
-
-				// ´´½¨Í¼Æ¬µÄBitmap
-				resBitmap = BitmapFactory.decodeResource(
-						context.getResources(), resId);
-
-				// ÔÙ·Åµ½»º´æÖÐ
-				mHardBitmapCache.put(cacheKey, resBitmap);
-
-			}
-
-		} catch (OutOfMemoryError e) {
-			Logger.e(TAG, "getBitmapByResId()", e);
-			System.gc();
-		}
-
-		return resBitmap;
-	}
-
-	private HttpClient getHttpClient() {
-		HttpParams params = new BasicHttpParams();
-
-		HttpConnectionParams.setConnectionTimeout(params, 20 * 1000);
-		HttpConnectionParams.setSoTimeout(params, 20 * 1000);
-		HttpConnectionParams.setSocketBufferSize(params, 8192);
-		HttpClientParams.setRedirecting(params, true);
-
-		HttpClient client = new DefaultHttpClient(params);
-		return client;
-	}
-
-	public interface ImageCallback {
-		public void imageLoaded(Bitmap bmp);
-	}
-
-	/**
-	 * °ÑbitmapÉèÖÃµ½ÏàÓ¦¿Ø¼þzho
-	 * 
-	 * @param view
-	 * @param bitmap
-	 */
-	public void setBitmapByView(View view, Bitmap bitmap) {
-		if (view instanceof ImageView) {
-			ImageView imageView = (ImageView) view;
-			imageView.setImageBitmap(bitmap);
-		} else if (view instanceof ImageSwitcher) {
-			ImageSwitcher imageSwitcher = (ImageSwitcher) view;
-			imageSwitcher.setImageDrawable(new BitmapDrawable(bitmap));
-		}
-	}
+    /**
+     * Same as download but the image is always downloaded and the cache is not
+     * used. Kept private at the moment as its interest is not clear.
+     */
+    private void forceDownload(String url, ImageView imageView, String cookie,
+                               int defaultPicType) {
+        try {
+
+            // State sanity: url is guaranteed to never be null in
+            if (url == null && imageView != null) {
+                // ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Í¼Æ¬
+                imageView.setImageBitmap(getDefaultBitmap(mContext));
+                return;
+            }
+
+            if (cancelPotentialDownload(url, imageView)) {
+
+                // mBitmapDownloaderTaskCache.remove(url);
+
+                BitmapDownloaderTask task = new BitmapDownloaderTask(imageView);
+
+                DownloadedDrawable downloadedDrawable = new DownloadedDrawable(
+                        task, mContext, defaultPicType);
+
+                // imageView.setImageDrawable(downloadedDrawable);
+
+                imageView.setTag(downloadedDrawable);
+
+                task.execute(url, cookie);
+
+                // Ã¿ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ß³Ì¾Í¼ï¿½ï¿½ëµ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // mBitmapDownloaderTaskCache.put(url, task);
+            }
+
+        } catch (RejectedExecutionException localRejectedExecutionException) {
+            Logger.w(TAG, "localRejectedExecutionException");
+        }
+    }
+
+    private final Handler purgeHandler = new Handler();
+
+    private final Runnable purger = new Runnable() {
+        @Override
+        public void run() {
+            clearCache();
+        }
+    };
+
+    /**
+     * Clears the image cache used internally to improve performance. Note that
+     * for memory efficiency reasons, the cache will automatically be cleared
+     * after a certain inactivity delay.
+     */
+    public void clearCache() {
+        mHardBitmapCache.clear();
+        mSoftBitmapCache.clear();
+
+    }
+
+    private void resetPurgeTimer() {
+        purgeHandler.removeCallbacks(purger);
+        purgeHandler.postDelayed(purger, DELAY_BEFORE_PURGE);
+    }
+
+    /**
+     * @param imageView Any imageView
+     * @return Retrieve the currently active download task (if any) associated
+     * with this imageView. null if there is no such task.
+     */
+    private static BitmapDownloaderTask getBitmapDownloaderTask(
+            ImageView imageView) {
+        if (imageView != null) {
+            Object objDrawable = imageView.getTag();
+            if (objDrawable != null
+                    && objDrawable instanceof DownloadedDrawable) {
+                DownloadedDrawable downloadedDrawable = (DownloadedDrawable) objDrawable;
+                return downloadedDrawable.getBitmapDownloaderTask();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param url The URL of the image that will be retrieved from the cache.
+     * @return The cached bitmap or null if it was not found.
+     */
+    public Bitmap getBitmapFromCache(String url) {
+        if (url == null || url.length() == 0)
+            return null;
+        // First try the hard reference cache
+        synchronized (mHardBitmapCache) {
+            final Bitmap bitmap = mHardBitmapCache.get(url);
+            if (bitmap != null) {
+                // Bitmap found in hard cache
+                // Move element to first position, so that it is removed last
+                mHardBitmapCache.remove(url);
+                mHardBitmapCache.put(url, bitmap);
+                // Logger.d(
+                // "ImageDownloader",
+                // "RAM HardReference Cache==>" + "Heap:"
+                // + (Debug.getNativeHeapSize() / 1024) + "KB "
+                // + "FreeHeap:"
+                // + (Debug.getNativeHeapFreeSize() / 1024)
+                // + "KB " + "AllHeap:"
+                // + (Debug.getNativeHeapAllocatedSize() / 1024)
+                // + "KB" + " url:" + url);
+                return bitmap;
+            }
+        }
+
+        // Then try the soft reference cache
+        SoftReference<Bitmap> bitmapReference = mSoftBitmapCache.get(url);
+        if (bitmapReference != null) {
+            final Bitmap bitmap = bitmapReference.get();
+            if (bitmap != null) {
+                // Bitmap found in soft cache
+                // Logger.d(
+                // "ImageDownloader",
+                // "RAM SoftReference Cache==>" + "Heap:"
+                // + (Debug.getNativeHeapSize() / 1024) + "KB "
+                // + "FreeHeap:"
+                // + (Debug.getNativeHeapFreeSize() / 1024)
+                // + "KB " + "AllHeap:"
+                // + (Debug.getNativeHeapAllocatedSize() / 1024)
+                // + "KB" + " url:" + url);
+                return bitmap;
+            } else {
+                // Soft reference has been Garbage Collected
+                mSoftBitmapCache.remove(url);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ÏµÄ¼ï¿½ï¿½ï¿½Í¼Æ¬
+     *
+     * @param context
+     * @param defaultPicType
+     * @return
+     */
+    private Bitmap getDefaultBitmap(Context context) {
+
+        // ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½Bitmap
+        Bitmap defaultBitmap = getBitmapByResId(context,
+                R.drawable.ic_launcher, DEFAULT_BITMAP_CACHE);
+        // Bitmap defaultBitmap = null;
+
+        // ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Í¼Æ¬ï¿½ï¿½Bitmap
+        return defaultBitmap;
+    }
+
+    /**
+     * The actual AsyncTask that will asynchronously download the image.
+     */
+    class BitmapDownloaderTask extends AsyncTask<String, Void, Bitmap> {
+        private static final int IO_BUFFER_SIZE = 4 * 1024;
+        private String url;
+        private final WeakReference<ImageView> imageViewReference;
+
+        public BitmapDownloaderTask(ImageView imageView) {
+            imageViewReference = new WeakReference<ImageView>(imageView);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+        }
+
+        /**
+         * Actual download method.
+         */
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            // ï¿½ï¿½ï¿½URL
+            url = params[0];
+
+            Bitmap bitmap = null;
+
+            // È¥ï¿½ï¿½ï¿½ï¿½ï¿½È¡Í¼Æ¬
+            try {
+
+                URL httpUrl = new URL(url);
+
+                HttpURLConnection httpURLConnection = (HttpURLConnection) httpUrl
+                        .openConnection();
+
+                httpURLConnection.setDoInput(true);
+
+                httpURLConnection.connect();
+
+                int statusCode = httpURLConnection.getResponseCode();
+                if (statusCode != HttpStatus.SC_OK) {
+                    Logger.w("ImageDownloader", "Error " + statusCode
+                            + " while retrieving bitmap from " + url);
+                    return null;
+                }
+
+                InputStream inputStream = null;
+                OutputStream outputStream = null;
+                try {
+
+                    inputStream = httpURLConnection.getInputStream();
+                    final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+                    outputStream = new BufferedOutputStream(
+                            byteArrayOutputStream, IO_BUFFER_SIZE);
+
+                    copy(inputStream, outputStream);
+
+                    outputStream.flush();
+
+                    // Logger.d(
+                    // TAG,
+                    // "Before download decodeStream==>"
+                    // + "Heap:"
+                    // + (Debug.getNativeHeapSize() / 1024)
+                    // + "KB "
+                    // + "FreeHeap:"
+                    // + (Debug.getNativeHeapFreeSize() / 1024)
+                    // + "KB "
+                    // + "AllocatedHeap:"
+                    // + (Debug.getNativeHeapAllocatedSize() / 1024)
+                    // + "KB" + " url:" + url);
+
+                    boolean isJpg = url.contains(".jpg");
+
+                    bitmap = BitmapTool.saveZoomBitmapToSDCard(
+                            byteArrayOutputStream, mScreen, url,
+                            PathCommonDefines.PHOTOCACHE_FOLDER, isJpg);
+
+                    // Logger.d(
+                    // TAG,
+                    // "doInbackground bitmap width:"
+                    // + bitmap.getWidth() + " height:"
+                    // + bitmap.getHeight());
+
+                    // Logger.d(
+                    // TAG,
+                    // "After download decodeStream==>"
+                    // + "Heap:"
+                    // + (Debug.getNativeHeapSize() / 1024)
+                    // + "KB "
+                    // + "FreeHeap:"
+                    // + (Debug.getNativeHeapFreeSize() / 1024)
+                    // + "KB "
+                    // + "AllocatedHeap:"
+                    // + (Debug.getNativeHeapAllocatedSize() / 1024)
+                    // + "KB" + " url:" + url);
+
+                    // if (client != null) {
+                    // client.close();
+                    // }
+                    return bitmap;
+                } finally {
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+                    if (outputStream != null) {
+                        outputStream.close();
+                    }
+                }
+                // }
+            } catch (IOException e) {
+                // getRequest.abort();
+                Logger.w(TAG, "I/O error while retrieving bitmap from " + url,
+                        e);
+            } catch (IllegalStateException e) {
+                // getRequest.abort();
+                Logger.w(TAG, "Incorrect URL: " + url);
+            } catch (Exception e) {
+                // getRequest.abort();
+                Logger.w(TAG, "Error while retrieving bitmap from " + url, e);
+            } catch (OutOfMemoryError e) {
+                // TODO: handle exception
+            } finally {
+
+            }
+
+            return null;
+
+        }
+
+        /**
+         * Once the image is downloaded, associates it to the imageView
+         */
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            if (isCancelled()) {
+                bitmap = null;
+            }
+
+            // Logger.d("ImageDownloader", "ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Í¼Æ¬");
+            // Add bitmap to cache
+            if (bitmap != null) {
+                synchronized (mHardBitmapCache) {
+                    mHardBitmapCache.put(url, bitmap);
+                }
+            }
+            // Logger.d("ImageDownloader", "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Í¼Æ¬");
+
+            if (imageViewReference != null) {
+                ImageView imageView = imageViewReference.get();
+                BitmapDownloaderTask bitmapDownloaderTask = getBitmapDownloaderTask(imageView);
+                // Change bitmap only if this process is still associated with
+                // it
+                if (this == bitmapDownloaderTask && bitmap != null) {
+
+                    // if (imageView instanceof MulitPointTouchImageView) {
+                    // // ((MulitPointTouchImageView) imageView)
+                    // // .setImageBitmap(bitmap);
+                    // } else {
+                    // imageView.setImageBitmap(bitmap);// ï¿½ï¿½ï¿½ï¿½
+                    // }
+                    if (mScaleType != null) {
+
+                        imageView.setScaleType(mScaleType);
+
+                    }
+                    imageView.setImageBitmap(bitmap);// ï¿½ï¿½ï¿½ï¿½
+
+                    // if (isImageViewCache) {
+                    // mImageViewCache.put(url, imageView);
+                    // }
+                }
+            }
+        }
+
+        public void copy(InputStream in, OutputStream out) throws IOException {
+            byte[] b = new byte[IO_BUFFER_SIZE];
+            int read;
+            while ((read = in.read(b)) != -1) {
+                out.write(b, 0, read);
+            }
+        }
+    }
+
+    /**
+     * A fake Drawable that will be attached to the imageView while the download
+     * is in progress.
+     * <p>
+     * <p>
+     * Contains a reference to the actual download task, so that a download task
+     * can be stopped if a new binding is required, and makes sure that only the
+     * last started download process can bind its result, independently of the
+     * download finish order.
+     * </p>
+     */
+    class DownloadedDrawable extends BitmapDrawable {
+        private final WeakReference<BitmapDownloaderTask> bitmapDownloaderTaskReference;
+
+        public DownloadedDrawable(BitmapDownloaderTask bitmapDownloaderTask,
+                                  Context context, int defaultPicType) {
+            // super();
+            super(context.getResources(), getDefaultBitmap(context));//
+            // ï¿½ï¿½Î»ï¿½Ã¿ï¿½ï¿½Ô¸Ä±ï¿½Í¼Æ¬ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½É«----ï¿½ï¿½ï¿½ï¿½
+            bitmapDownloaderTaskReference = new WeakReference<BitmapDownloaderTask>(
+                    bitmapDownloaderTask);
+        }
+
+        public BitmapDownloaderTask getBitmapDownloaderTask() {
+            return bitmapDownloaderTaskReference.get();
+        }
+
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½Ô´IDï¿½ï¿½ï¿½ï¿½Bitmap
+     *
+     * @param context
+     * @param resId
+     * @return
+     */
+    public Bitmap getBitmapByResId(Context context, int resId, String cacheKey) {
+
+        // ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½È¡Ä¬ï¿½ï¿½Í¼Æ¬
+        Bitmap resBitmap = mHardBitmapCache.get(cacheKey);
+        try {
+            if (resBitmap == null) {
+
+                // ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½Bitmap
+                resBitmap = BitmapFactory.decodeResource(
+                        context.getResources(), resId);
+
+                // ï¿½Ù·Åµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                mHardBitmapCache.put(cacheKey, resBitmap);
+
+            }
+
+        } catch (OutOfMemoryError e) {
+            Logger.e(TAG, "getBitmapByResId()", e);
+            System.gc();
+        }
+
+        return resBitmap;
+    }
+
+    private HttpClient getHttpClient() {
+        HttpParams params = new BasicHttpParams();
+
+        HttpConnectionParams.setConnectionTimeout(params, 20 * 1000);
+        HttpConnectionParams.setSoTimeout(params, 20 * 1000);
+        HttpConnectionParams.setSocketBufferSize(params, 8192);
+        HttpClientParams.setRedirecting(params, true);
+
+        HttpClient client = new DefaultHttpClient(params);
+        return client;
+    }
+
+    public interface ImageCallback {
+        public void imageLoaded(Bitmap bmp);
+    }
+
+    /**
+     * ï¿½ï¿½bitmapï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½Ó¦ï¿½Ø¼ï¿½zho
+     *
+     * @param view
+     * @param bitmap
+     */
+    public void setBitmapByView(View view, Bitmap bitmap) {
+        if (view instanceof ImageView) {
+            ImageView imageView = (ImageView) view;
+            imageView.setImageBitmap(bitmap);
+        } else if (view instanceof ImageSwitcher) {
+            ImageSwitcher imageSwitcher = (ImageSwitcher) view;
+            imageSwitcher.setImageDrawable(new BitmapDrawable(bitmap));
+        }
+    }
 }

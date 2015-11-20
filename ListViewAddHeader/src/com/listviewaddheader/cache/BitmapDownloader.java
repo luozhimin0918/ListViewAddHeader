@@ -32,196 +32,196 @@ import com.listviewaddheader.utils.ScreenUtil;
 import com.listviewaddheader.utils.ScreenUtil.Screen;
 
 public class BitmapDownloader {
-	private static final String TAG = "AsyncImageLoader";
-	private static final int IO_BUFFER_SIZE = 4 * 1024;
-	private HashMap<String, SoftReference<Bitmap>> mImageCacheHashMap;
-	private BlockingQueue<Runnable> mBlockingQueue;
-	private ThreadPoolExecutor executor;
-	private Screen mScreen = null;
+    private static final String TAG = "AsyncImageLoader";
+    private static final int IO_BUFFER_SIZE = 4 * 1024;
+    private HashMap<String, SoftReference<Bitmap>> mImageCacheHashMap;
+    private BlockingQueue<Runnable> mBlockingQueue;
+    private ThreadPoolExecutor executor;
+    private Screen mScreen = null;
 
-	public BitmapDownloader(Context context) {
-		mImageCacheHashMap = new HashMap<String, SoftReference<Bitmap>>();
-		mScreen = ScreenUtil.getScreenPix(context);
-		// Ïß³Ì³Ø£º×î´ó50Ìõ£¬Ã¿´ÎÖ´ÐÐ£º1Ìõ£¬¿ÕÏÐÏß³Ì½áÊøµÄ³¬Ê±Ê±¼ä£º180Ãë
-		mBlockingQueue = new LinkedBlockingQueue<Runnable>();
-		executor = new ThreadPoolExecutor(1, 50, 180, TimeUnit.SECONDS,
-				mBlockingQueue);
-	}
+    public BitmapDownloader(Context context) {
+        mImageCacheHashMap = new HashMap<String, SoftReference<Bitmap>>();
+        mScreen = ScreenUtil.getScreenPix(context);
+        // ï¿½ß³Ì³Ø£ï¿½ï¿½ï¿½ï¿½50ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½Ö´ï¿½Ð£ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½Ê±Ê±ï¿½ä£º180ï¿½ï¿½
+        mBlockingQueue = new LinkedBlockingQueue<Runnable>();
+        executor = new ThreadPoolExecutor(1, 50, 180, TimeUnit.SECONDS,
+                mBlockingQueue);
+    }
 
-	public ThreadPoolExecutor getThreadPoolExecutor() {
-		return executor;
-	}
+    public ThreadPoolExecutor getThreadPoolExecutor() {
+        return executor;
+    }
 
-	public Bitmap loadImage(final String url, final ImageCallback imageCallback) {
-		
-		if (url == null || (url != null && url.equals(""))) {
-			return null;
-		}
-		
-		if (mImageCacheHashMap.containsKey(url)) {
-			SoftReference<Bitmap> softReference = mImageCacheHashMap.get(url);
-			Bitmap bitmap = softReference.get();
-			if (bitmap != null) {
-				return bitmap;
-			}
-		}
-		final Handler handler = new Handler() {
-			public void handleMessage(Message message) {
-				if (imageCallback != null) {
-					imageCallback.imageLoaded((Bitmap) message.obj, url);
-				}
+    public Bitmap loadImage(final String url, final ImageCallback imageCallback) {
 
-			}
-		};
+        if (url == null || (url != null && url.equals(""))) {
+            return null;
+        }
 
-		Bitmap bitmap = fromLocalUrl(url);
+        if (mImageCacheHashMap.containsKey(url)) {
+            SoftReference<Bitmap> softReference = mImageCacheHashMap.get(url);
+            Bitmap bitmap = softReference.get();
+            if (bitmap != null) {
+                return bitmap;
+            }
+        }
+        final Handler handler = new Handler() {
+            public void handleMessage(Message message) {
+                if (imageCallback != null) {
+                    imageCallback.imageLoaded((Bitmap) message.obj, url);
+                }
 
-		if (bitmap == null) {
+            }
+        };
 
-			// ÓÃÏß³Ì³ØÀ´×öÏÂÔØÍ¼Æ¬µÄÈÎÎñ
-			executor.execute(new Runnable() {
-				@Override
-				public void run() {
-					Bitmap bitmap = fromNetWorkUrl(url);
-					mImageCacheHashMap.put(url, new SoftReference<Bitmap>(
-							bitmap));
-					Message message = handler.obtainMessage(0, bitmap);
-					handler.sendMessage(message);
-				}
-			});
+        Bitmap bitmap = fromLocalUrl(url);
 
-		}
+        if (bitmap == null) {
 
-		return bitmap;
-	}
+            // ï¿½ï¿½ï¿½ß³Ì³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Bitmap bitmap = fromNetWorkUrl(url);
+                    mImageCacheHashMap.put(url, new SoftReference<Bitmap>(
+                            bitmap));
+                    Message message = handler.obtainMessage(0, bitmap);
+                    handler.sendMessage(message);
+                }
+            });
 
-	/**
-	 * ±¾µØÍ¼Æ¬
-	 * 
-	 * @param imageUrl
-	 * @return
-	 */
-	public Bitmap fromLocalUrl(String imageUrl) {
-		Bitmap bitmap = null;
+        }
 
-		try {
-			if (imageUrl == null)
-				return null;
-			String imagePath = "";
-			String fileName = "";
+        return bitmap;
+    }
 
-			// »ñÈ¡urlÖÐÍ¼Æ¬µÄÎÄ¼þÃûÓëºó×º
-			if (imageUrl != null && imageUrl.length() != 0) {
-				fileName = HelperUtils.getInstance().convertUrlToFileName(
-						imageUrl);
-			}
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼Æ¬
+     *
+     * @param imageUrl
+     * @return
+     */
+    public Bitmap fromLocalUrl(String imageUrl) {
+        Bitmap bitmap = null;
 
-			// Í¼Æ¬ÔÚÊÖ»ú±¾µØµÄ´æ·ÅÂ·¾¶,×¢Òâ£ºfileNameÎª¿ÕµÄÇé¿ö
-			imagePath = PathCommonDefines.PHOTOCACHE_FOLDER + "/" + fileName;
+        try {
+            if (imageUrl == null)
+                return null;
+            String imagePath = "";
+            String fileName = "";
 
-			// Log.i(TAG,"imagePath = " + imagePath);
-			File file = new File(imagePath);// ±£´æÎÄ¼þ
-			// Log.i(TAG,"file.toString()=" + file.toString());
-			if (file.exists()) {
+            // ï¿½ï¿½È¡urlï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×º
+            if (imageUrl != null && imageUrl.length() != 0) {
+                fileName = HelperUtils.getInstance().convertUrlToFileName(
+                        imageUrl);
+            }
 
-				bitmap = BitmapFactory.decodeFile(imagePath);
+            // Í¼Æ¬ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ØµÄ´ï¿½ï¿½Â·ï¿½ï¿½,×¢ï¿½â£ºfileNameÎªï¿½Õµï¿½ï¿½ï¿½ï¿½
+            imagePath = PathCommonDefines.PHOTOCACHE_FOLDER + "/" + fileName;
 
-				mImageCacheHashMap.put(imageUrl, new SoftReference<Bitmap>(
-						bitmap));
+            // Log.i(TAG,"imagePath = " + imagePath);
+            File file = new File(imagePath);// ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
+            // Log.i(TAG,"file.toString()=" + file.toString());
+            if (file.exists()) {
 
-				return bitmap;
+                bitmap = BitmapFactory.decodeFile(imagePath);
 
-			}
-		} catch (Exception e) {
-			Logger.e(TAG, "e:" + e.getMessage());
-		}
-		return bitmap;
-	}
+                mImageCacheHashMap.put(imageUrl, new SoftReference<Bitmap>(
+                        bitmap));
 
-	/**
-	 * ÍøÂçÍ¼Æ¬
-	 * 
-	 * @param url
-	 * @return
-	 */
-	public Bitmap fromNetWorkUrl(String url) {
-		Bitmap bitmap = null;
-		try {
+                return bitmap;
 
-			if (url == null)
-				return null;
-			String imagePath = "";
-			String fileName = "";
+            }
+        } catch (Exception e) {
+            Logger.e(TAG, "e:" + e.getMessage());
+        }
+        return bitmap;
+    }
 
-			// »ñÈ¡urlÖÐÍ¼Æ¬µÄÎÄ¼þÃûÓëºó×º
-			if (url != null && url.length() != 0) {
-				fileName = HelperUtils.getInstance().convertUrlToFileName(url);
-			}
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼Æ¬
+     *
+     * @param url
+     * @return
+     */
+    public Bitmap fromNetWorkUrl(String url) {
+        Bitmap bitmap = null;
+        try {
 
-			// Í¼Æ¬ÔÚÊÖ»ú±¾µØµÄ´æ·ÅÂ·¾¶,×¢Òâ£ºfileNameÎª¿ÕµÄÇé¿ö
-			imagePath = PathCommonDefines.PHOTOCACHE_FOLDER + "/" + fileName;
+            if (url == null)
+                return null;
+            String imagePath = "";
+            String fileName = "";
 
-			// Log.i(TAG,"imagePath = " + imagePath);
+            // ï¿½ï¿½È¡urlï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×º
+            if (url != null && url.length() != 0) {
+                fileName = HelperUtils.getInstance().convertUrlToFileName(url);
+            }
 
-			// ±£´æÎÄ¼þ
-			File file = new File(imagePath);
+            // Í¼Æ¬ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ØµÄ´ï¿½ï¿½Â·ï¿½ï¿½,×¢ï¿½â£ºfileNameÎªï¿½Õµï¿½ï¿½ï¿½ï¿½
+            imagePath = PathCommonDefines.PHOTOCACHE_FOLDER + "/" + fileName;
 
-			URL httpUrl = new URL(url);
+            // Log.i(TAG,"imagePath = " + imagePath);
 
-			HttpURLConnection httpURLConnection = (HttpURLConnection) httpUrl
-					.openConnection();
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
+            File file = new File(imagePath);
 
-			httpURLConnection.setDoInput(true);
+            URL httpUrl = new URL(url);
 
-			httpURLConnection.connect();
+            HttpURLConnection httpURLConnection = (HttpURLConnection) httpUrl
+                    .openConnection();
 
-			int statusCode = httpURLConnection.getResponseCode();
-			if (statusCode != HttpStatus.SC_OK) {
-				Logger.w("ImageDownloader", "Error " + statusCode
-						+ " while retrieving bitmap from " + url);
-				return null;
-			}
+            httpURLConnection.setDoInput(true);
 
-			InputStream inputStream = null;
-			OutputStream outputStream = null;
-			try {
-				inputStream = httpURLConnection.getInputStream();
-				final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-				outputStream = new BufferedOutputStream(byteArrayOutputStream,
-						IO_BUFFER_SIZE);
-				copy(inputStream, outputStream);
-				outputStream.flush();
+            httpURLConnection.connect();
 
-				boolean isJpg = url.contains(".jpg");
+            int statusCode = httpURLConnection.getResponseCode();
+            if (statusCode != HttpStatus.SC_OK) {
+                Logger.w("ImageDownloader", "Error " + statusCode
+                        + " while retrieving bitmap from " + url);
+                return null;
+            }
 
-				// Ëõ·ÅÍ¼Æ¬²¢±£´æÍ¼Æ¬
-				bitmap = BitmapTool.saveZoomBitmapToSDCard(byteArrayOutputStream, mScreen,
-						url, PathCommonDefines.PHOTOCACHE_FOLDER, isJpg);
-			} finally {
-				if (inputStream != null) {
-					inputStream.close();
-				}
-				if (outputStream != null) {
-					outputStream.close();
-				}
-			}
-			return bitmap;
-		} catch (IOException e) {
-			Log.e(TAG, e.toString() + "Í¼Æ¬ÏÂÔØ¼°±£´æÊ±³öÏÖÒì³££¡");
-		}
-		return null;
-	}
+            InputStream inputStream = null;
+            OutputStream outputStream = null;
+            try {
+                inputStream = httpURLConnection.getInputStream();
+                final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                outputStream = new BufferedOutputStream(byteArrayOutputStream,
+                        IO_BUFFER_SIZE);
+                copy(inputStream, outputStream);
+                outputStream.flush();
 
-	public void copy(InputStream in, OutputStream out) throws IOException {
-		byte[] b = new byte[IO_BUFFER_SIZE];
-		int read;
-		while ((read = in.read(b)) != -1) {
-			out.write(b, 0, read);
-		}
-	}
+                boolean isJpg = url.contains(".jpg");
 
-	public interface ImageCallback {
-		public void imageLoaded(Bitmap bitmap, String imageUrl);
-	}
+                // ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼Æ¬
+                bitmap = BitmapTool.saveZoomBitmapToSDCard(byteArrayOutputStream, mScreen,
+                        url, PathCommonDefines.PHOTOCACHE_FOLDER, isJpg);
+            } finally {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+            return bitmap;
+        } catch (IOException e) {
+            Log.e(TAG, e.toString() + "Í¼Æ¬ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½");
+        }
+        return null;
+    }
+
+    public void copy(InputStream in, OutputStream out) throws IOException {
+        byte[] b = new byte[IO_BUFFER_SIZE];
+        int read;
+        while ((read = in.read(b)) != -1) {
+            out.write(b, 0, read);
+        }
+    }
+
+    public interface ImageCallback {
+        public void imageLoaded(Bitmap bitmap, String imageUrl);
+    }
 
 }

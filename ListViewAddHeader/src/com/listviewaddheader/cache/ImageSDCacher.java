@@ -21,390 +21,385 @@ import com.listviewaddheader.utils.MiscUtils;
 
 public class ImageSDCacher {
 
-	private final static String TAG = ImageSDCacher.class.getSimpleName();
-	private static ImageSDCacher mInstance;
-	private final static int FREE_SD_SPACE_NEEDED_TO_CACHE = 50; // Mb
-	private final static int MAX_CACHE_SIZE_NEEDED = 30; // Mb
-	private final static String WHOLESALE_CONV = ".jpg";
-	private final static long CACHE_EXPIRE_THRESHOLD = 3600 * 24 * 7; // one
-	HandlerThread mHandlerThread = null;
-	private Handler mHandler = null;
-	private BitmapTool mBitmapTool = new BitmapTool();
-
-	private ImageSDCacher() {
-		mHandlerThread = new HandlerThread("sdcacher_thread");
-		mHandlerThread.start();
-	}
-
-	public static ImageSDCacher getImageSDCacher() {
-		if (mInstance == null) {
-			mInstance = new ImageSDCacher();
-		}
-		return mInstance;
-	}
-
-	/**
-	 * ¸ù¾ÝÍ¼Æ¬»º´æÂ·¾¶·µ»ØBitmap
-	 * 
-	 * @param url
-	 *            Í¼Æ¬»º´æÂ·¾¶
-	 * @param cachePath
-	 *            ±¾µØ»º´æ¸¸Â·¾¶</br>PathCommonDefines.PHOTOCACHE_FOLDER ³ÌÐò»º´æÍ¼Æ¬Â·¾¶;</br>
-	 *            PathCommonDefines.MY_FAVOURITE_FOLDER ÎÒµÄÊÕ²ØÍ¼Æ¬Â·¾¶
-	 * @return bitmap
-	 */
-	public Bitmap getBitmapByCachePath(String url, String cachePath) {
-
-		Bitmap bitmap = null;
-		if (isImageSDCachedByPath(url, cachePath)) {
-			String filePath = url != null && url.startsWith("http://") ? (cachePath
-					+ File.separator + convertUrlToFileName(url))
-					: url;
-			bitmap = mBitmapTool.CreateImage(filePath);
-		} else {
-			Logger.w(TAG, "Pictures don't cached into SDCard.");
-		}
-
-		return bitmap;
-	}
-
-	/**
-	 * ÅÐ¶ÏÍ¼Æ¬ÊÇ·ñ´æÔÚ
-	 * 
-	 * @param url
-	 *            Í¼Æ¬Á´½Ó
-	 * @param cachePath
-	 *            ±¾µØ»º´æ¸¸Â·¾¶</br>PathCommonDefines.PHOTOCACHE_FOLDER ³ÌÐò»º´æÍ¼Æ¬Â·¾¶;</br>
-	 *            PathCommonDefines.MY_FAVOURITE_FOLDER ÎÒµÄÊÕ²ØÍ¼Æ¬Â·¾¶
-	 * @return ÊÇ·ñ´æÔÚ
-	 */
-	public boolean isImageSDCachedByPath(String url, String cachePath) {
-		if (url == null || url.trim().length() <= 0) {
-			Logger.e(TAG, "img url is null");
-			return false;
-		}
-
-		String fileName = url.startsWith("http://") ? convertUrlToFileName(url)
-				: url;
-		// Logger.i(TAG, "isImageSDCachedByPath+url:" + url);
-		// Logger.d(TAG, "isImageSDCachedByPath+fileName:" + fileName);
-		// Create Path
-		File file = new File(cachePath + File.separator);
-		if (!file.exists()) {
-			file.mkdirs();
-		}
-		if (fileName != null) {
-			String filePath = url.startsWith("http://") ? (cachePath
-					+ File.separator + fileName) : fileName;
-			File f = new File(filePath);
-
-			if (f.exists()) {
-				Logger.d(TAG, "File sdCard cached_myimg exits:" + url);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * ±£´æBitmapµ½Ö¸¶¨µÄÄ¿Â¼ÏÂ
-	 * 
-	 * @param bitmap
-	 *            ±£´æµÄbitmap
-	 * @param url
-	 *            Í¼Æ¬ÍøÂçÂ·¾¶
-	 * @param cachePath
-	 *            ±¾µØ»º´æ¸¸Â·¾¶</br>PathCommonDefines.PHOTOCACHE_FOLDER ³ÌÐò»º´æÍ¼Æ¬Â·¾¶;</br>
-	 *            PathCommonDefines.MY_FAVOURITE_FOLDER ÎÒµÄÊÕ²ØÍ¼Æ¬Â·¾¶
-	 * @param isJpg
-	 *            ÊÇ·ñÊÇJPG
-	 * @param quality
-	 *            Ëõ·Å±È
-	 * @return ÊÇ·ñ³É¹¦
-	 */
-	public boolean saveBitmapToSDCard(Bitmap bitmap, String url,
-			String cachePath, boolean isJpg, int quality) {
+    private final static String TAG = ImageSDCacher.class.getSimpleName();
+    private static ImageSDCacher mInstance;
+    private final static int FREE_SD_SPACE_NEEDED_TO_CACHE = 50; // Mb
+    private final static int MAX_CACHE_SIZE_NEEDED = 30; // Mb
+    private final static String WHOLESALE_CONV = ".jpg";
+    private final static long CACHE_EXPIRE_THRESHOLD = 3600 * 24 * 7; // one
+    HandlerThread mHandlerThread = null;
+    private Handler mHandler = null;
+    private BitmapTool mBitmapTool = new BitmapTool();
+
+    private ImageSDCacher() {
+        mHandlerThread = new HandlerThread("sdcacher_thread");
+        mHandlerThread.start();
+    }
+
+    public static ImageSDCacher getImageSDCacher() {
+        if (mInstance == null) {
+            mInstance = new ImageSDCacher();
+        }
+        return mInstance;
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Bitmap
+     *
+     * @param url       Í¼Æ¬ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½
+     * @param cachePath ï¿½ï¿½ï¿½Ø»ï¿½ï¿½æ¸¸Â·ï¿½ï¿½</br>PathCommonDefines.PHOTOCACHE_FOLDER ï¿½ï¿½ï¿½ò»º´ï¿½Í¼Æ¬Â·ï¿½ï¿½;</br>
+     *                  PathCommonDefines.MY_FAVOURITE_FOLDER ï¿½Òµï¿½ï¿½Õ²ï¿½Í¼Æ¬Â·ï¿½ï¿½
+     * @return bitmap
+     */
+    public Bitmap getBitmapByCachePath(String url, String cachePath) {
+
+        Bitmap bitmap = null;
+        if (isImageSDCachedByPath(url, cachePath)) {
+            String filePath = url != null && url.startsWith("http://") ? (cachePath
+                    + File.separator + convertUrlToFileName(url))
+                    : url;
+            bitmap = mBitmapTool.CreateImage(filePath);
+        } else {
+            Logger.w(TAG, "Pictures don't cached into SDCard.");
+        }
+
+        return bitmap;
+    }
+
+    /**
+     * ï¿½Ð¶ï¿½Í¼Æ¬ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
+     *
+     * @param url       Í¼Æ¬ï¿½ï¿½ï¿½ï¿½
+     * @param cachePath ï¿½ï¿½ï¿½Ø»ï¿½ï¿½æ¸¸Â·ï¿½ï¿½</br>PathCommonDefines.PHOTOCACHE_FOLDER ï¿½ï¿½ï¿½ò»º´ï¿½Í¼Æ¬Â·ï¿½ï¿½;</br>
+     *                  PathCommonDefines.MY_FAVOURITE_FOLDER ï¿½Òµï¿½ï¿½Õ²ï¿½Í¼Æ¬Â·ï¿½ï¿½
+     * @return ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
+     */
+    public boolean isImageSDCachedByPath(String url, String cachePath) {
+        if (url == null || url.trim().length() <= 0) {
+            Logger.e(TAG, "img url is null");
+            return false;
+        }
+
+        String fileName = url.startsWith("http://") ? convertUrlToFileName(url)
+                : url;
+        // Logger.i(TAG, "isImageSDCachedByPath+url:" + url);
+        // Logger.d(TAG, "isImageSDCachedByPath+fileName:" + fileName);
+        // Create Path
+        File file = new File(cachePath + File.separator);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        if (fileName != null) {
+            String filePath = url.startsWith("http://") ? (cachePath
+                    + File.separator + fileName) : fileName;
+            File f = new File(filePath);
+
+            if (f.exists()) {
+                Logger.d(TAG, "File sdCard cached_myimg exits:" + url);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Bitmapï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ï¿½ï¿½
+     *
+     * @param bitmap    ï¿½ï¿½ï¿½ï¿½ï¿½bitmap
+     * @param url       Í¼Æ¬ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½
+     * @param cachePath ï¿½ï¿½ï¿½Ø»ï¿½ï¿½æ¸¸Â·ï¿½ï¿½</br>PathCommonDefines.PHOTOCACHE_FOLDER ï¿½ï¿½ï¿½ò»º´ï¿½Í¼Æ¬Â·ï¿½ï¿½;</br>
+     *                  PathCommonDefines.MY_FAVOURITE_FOLDER ï¿½Òµï¿½ï¿½Õ²ï¿½Í¼Æ¬Â·ï¿½ï¿½
+     * @param isJpg     ï¿½Ç·ï¿½ï¿½ï¿½JPG
+     * @param quality   ï¿½ï¿½ï¿½Å±ï¿½
+     * @return ï¿½Ç·ï¿½É¹ï¿½
+     */
+    public boolean saveBitmapToSDCard(Bitmap bitmap, String url,
+                                      String cachePath, boolean isJpg, int quality) {
 
-		boolean result = false;
+        boolean result = false;
 
-		if (bitmap == null) {
-			Logger.w(TAG, " trying to save null bitmap");
-			return false;
-		}
+        if (bitmap == null) {
+            Logger.w(TAG, " trying to save null bitmap");
+            return false;
+        }
 
-		if (FREE_SD_SPACE_NEEDED_TO_CACHE > MiscUtils.freeSpaceOnSd()) {
-			Logger.w(TAG, "Low free space onsd, do not cache");
-			return false;
-		}
+        if (FREE_SD_SPACE_NEEDED_TO_CACHE > MiscUtils.freeSpaceOnSd()) {
+            Logger.w(TAG, "Low free space onsd, do not cache");
+            return false;
+        }
 
-		if (url == null || (url != null && url.equals(""))) {
-			return false;
-		}
+        if (url == null || (url != null && url.equals(""))) {
+            return false;
+        }
 
-		File makeDirectoryPathFile = new File(cachePath);
+        File makeDirectoryPathFile = new File(cachePath);
 
-		if (!makeDirectoryPathFile.isDirectory()) {
-			makeDirectoryPathFile.mkdirs();
-		}
+        if (!makeDirectoryPathFile.isDirectory()) {
+            makeDirectoryPathFile.mkdirs();
+        }
 
-		String filename = convertUrlToFileName(url);
+        String filename = convertUrlToFileName(url);
 
-		File file = new File(cachePath + File.separator + filename);
+        File file = new File(cachePath + File.separator + filename);
 
-		// Logger.d(TAG, "url:" + url);
-		// Logger.i(TAG, "fileName:" + filename);
+        // Logger.d(TAG, "url:" + url);
+        // Logger.i(TAG, "fileName:" + filename);
 
-		try {
+        try {
 
-			file.createNewFile();
+            file.createNewFile();
 
-			OutputStream outStream = new FileOutputStream(file);
+            OutputStream outStream = new FileOutputStream(file);
 
-			if (isJpg) {
-				// Êä³ö
-				bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outStream);
-			} else {
-				// Êä³ö
-				bitmap.compress(Bitmap.CompressFormat.PNG, quality, outStream);
-			}
+            if (isJpg) {
+                // ï¿½ï¿½ï¿½
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outStream);
+            } else {
+                // ï¿½ï¿½ï¿½
+                bitmap.compress(Bitmap.CompressFormat.PNG, quality, outStream);
+            }
 
-			result = true;
+            result = true;
 
-		} catch (IOException e) {
+        } catch (IOException e) {
 
-			Logger.e(TAG, "saveBitmapToSDCard():" + e.getMessage(), e);
+            Logger.e(TAG, "saveBitmapToSDCard():" + e.getMessage(), e);
 
-			result = false;
+            result = false;
 
-		}
+        }
 
-		// ÇåÀí»º´æ
-		removeCache(cachePath);
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        removeCache(cachePath);
 
-		return result;
-	}
+        return result;
+    }
 
-	public void copyFile(File sourceFile, File targetFile) {
-		try {
+    public void copyFile(File sourceFile, File targetFile) {
+        try {
 
-			// ÐÂ½¨ÎÄ¼þÊäÈëÁ÷²¢¶ÔËü½øÐÐ»º³å
+            // ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½
 
-			FileInputStream input = new FileInputStream(sourceFile);
-
-			BufferedInputStream inBuff = new BufferedInputStream(input);
-
-			// ÐÂ½¨ÎÄ¼þÊä³öÁ÷²¢¶ÔËü½øÐÐ»º³å
-
-			FileOutputStream output = new FileOutputStream(targetFile);
-
-			BufferedOutputStream outBuff = new BufferedOutputStream(output);
-
-			// »º³åÊý×é
-
-			byte[] b = new byte[1024 * 5];
-
-			int len;
-
-			while ((len = inBuff.read(b)) != -1) {
-
-				outBuff.write(b, 0, len);
-
-			}
-
-			// Ë¢ÐÂ´Ë»º³åµÄÊä³öÁ÷
-
-			outBuff.flush();
-
-			// ¹Ø±ÕÁ÷
-
-			inBuff.close();
-
-			outBuff.close();
-
-			output.close();
-
-			input.close();
-		} catch (IOException e) {
-			// TODO: handle exception
-		}
-
-	}
-
-	/**
-	 * ½«ÓÃ»§Ñ¡ÖÐµÄÍ¼Æ¬¿½±´µ½Ö¸¶¨µÄ»º´æÄ¿Â¼
-	 * 
-	 * @param originalPath
-	 *            Ô­Ê¼Ä¿Â¼
-	 * @return Ö¸¶¨µÄ»º´æÄ¿Â¼
-	 */
-	// public String saveAvatarTemptoSDCard(String originalPath, int type) {
-	// String fileName = "";
-	// String tempPath = "";
-	// String tempPath_fileName = "";
-	// if (originalPath != null && !originalPath.equals("")) {
-	//
-	// fileName = originalPath
-	// .substring(originalPath.lastIndexOf("/") + 1);
-	//
-	// switch (type) {
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_NEWACCOUNT:// ÓÃ»§Í·Ïñ
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_PROFILE_AVATAR:
-	// tempPath = PathCommonDefines.USER_AVATAR_FOLDER
-	// + File.separator;
-	//
-	// break;
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_PROFILE_CAMERA://
-	// ProfileActivityÖÐµÄcameraÅÄÕÕ(²»±à¼­)
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_FEATUREDFEED:// ·ÇÓÃ»§Í·Ïñ
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_ILIKE:
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_MYTRIPS:
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_NEWTRIP:
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_PICKCOVER:
-	// case OrdinaryCommonDefines.TRIP_ID_FROM_TRIPDETAIL:
-	//
-	// tempPath = PathCommonDefines.DCIM_FOTO_FOLDER + File.separator;
-	// break;
-	// default:
-	// break;
-	// }
-	//
-	// tempPath_fileName = tempPath + fileName;
-	// try {
-	//
-	// File files = new File(tempPath);
-	//
-	// File sourceFile = new File(originalPath);
-	// File targetFile = new File(tempPath_fileName);
-	//
-	// files.mkdirs();
-	// targetFile.createNewFile();
-	//
-	// copyFile(sourceFile, targetFile);
-	//
-	// } catch (Exception e) {
-	// e.printStackTrace();
-	// tempPath_fileName = "";
-	// }
-	// }
-	// return tempPath_fileName;
-	// }
-	/*** Method to calculate the sample size for the bitmap **/
-	public static int computeSampleSize(BitmapFactory.Options options,
-			int minSideLength, int maxNumOfPixels) {
-		int initialSize = computeInitialSampleSize(options, minSideLength,
-				maxNumOfPixels);
-
-		int roundedSize;
-		if (initialSize <= 8) {
-			roundedSize = 1;
-			while (roundedSize < initialSize) {
-				roundedSize <<= 1;
-			}
-		} else {
-			roundedSize = (initialSize + 7) / 8 * 8;
-		}
-
-		return roundedSize;
-	}
-
-	/*** Method to calculate the sample size for the bitmap **/
-	private static int computeInitialSampleSize(BitmapFactory.Options options,
-			int minSideLength, int maxNumOfPixels) {
-		double w = options.outWidth;
-		double h = options.outHeight;
-
-		int lowerBound = (maxNumOfPixels == -1) ? 1 : (int) Math.ceil(Math
-				.sqrt(w * h / maxNumOfPixels));
-		int upperBound = (minSideLength == -1) ? 128 : (int) Math.min(
-				Math.floor(w / minSideLength), Math.floor(h / minSideLength));
-
-		if (upperBound < lowerBound) {
-			// return the larger one when there is no overlapping zone.
-			return lowerBound;
-		}
-
-		if ((maxNumOfPixels == -1) && (minSideLength == -1)) {
-			return 1;
-		} else if (minSideLength == -1) {
-			return lowerBound;
-		} else {
-			return upperBound;
-		}
-	}
-
-	private String convertUrlToFileName(String url) {
-		String fn = null;
-		if (url != null && url.trim().length() > 0) {
-
-			if (url.contains(".png")) {
-
-				fn = String.valueOf(url.hashCode()) + ".png";
-
-			} else {
-
-				fn = String.valueOf(url.hashCode()) + ".jpg";
-
-			}
-
-		}
-		return fn;
-	}
-
-	/**
-	 * ÇåÀí»º´æ
-	 * 
-	 * @param cachePath
-	 *            ±¾µØ»º´æ¸¸Â·¾¶</br>PathCommonDefines.PHOTOCACHE_FOLDER ³ÌÐò»º´æÍ¼Æ¬Â·¾¶;</br>
-	 *            PathCommonDefines.MY_FAVOURITE_FOLDER ÎÒµÄÊÕ²ØÍ¼Æ¬Â·¾¶
-	 */
-	private void removeCache(String cachePath) {
-		String dirPath = cachePath;
-		File dir = new File(dirPath);
-		File[] files = dir.listFiles();
-		if (files == null) {
-			return;
-		}
-		int dirSize = 0;
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].getName().contains(WHOLESALE_CONV)) {
-				dirSize += files[i].length();
-			}
-		}
-		if (dirSize > MAX_CACHE_SIZE_NEEDED * 1024 * 1024
-				|| FREE_SD_SPACE_NEEDED_TO_CACHE > MiscUtils.freeSpaceOnSd()) {
-			int removeFactor = (int) ((0.4 * files.length) + 1);
-
-			Arrays.sort(files, new FileLastModifSort());
-			Logger.i(TAG, "Clear some expiredcache files ");
-
-			for (int i = 0; i < removeFactor; i++) {
-
-				if (files[i].getName().contains(WHOLESALE_CONV)) {
-					files[i].delete();
-				}
-			}
-		}
-	}
-
-	protected void removeExpiredCache(String dirPath, String filename) {
-
-		File file = new File(dirPath, filename);
-		if (System.currentTimeMillis() - file.lastModified() > CACHE_EXPIRE_THRESHOLD) {
-			Logger.i(TAG, "Clear some expired cache files ");
-			file.delete();
-		}
-	}
-
-	class FileLastModifSort implements Comparator<File> {
-		@Override
-		public int compare(File arg0, File arg1) {
-			if (arg0.lastModified() > arg1.lastModified()) {
-				return 1;
-			} else if (arg0.lastModified() == arg1.lastModified()) {
-				return 0;
-			} else {
-				return -1;
-			}
-		}
-	}
+            FileInputStream input = new FileInputStream(sourceFile);
+
+            BufferedInputStream inBuff = new BufferedInputStream(input);
+
+            // ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½
+
+            FileOutputStream output = new FileOutputStream(targetFile);
+
+            BufferedOutputStream outBuff = new BufferedOutputStream(output);
+
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+
+            byte[] b = new byte[1024 * 5];
+
+            int len;
+
+            while ((len = inBuff.read(b)) != -1) {
+
+                outBuff.write(b, 0, len);
+
+            }
+
+            // Ë¢ï¿½Â´Ë»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+
+            outBuff.flush();
+
+            // ï¿½Ø±ï¿½ï¿½ï¿½
+
+            inBuff.close();
+
+            outBuff.close();
+
+            output.close();
+
+            input.close();
+        } catch (IOException e) {
+            // TODO: handle exception
+        }
+
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½Ã»ï¿½Ñ¡ï¿½Ðµï¿½Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Ä¿Â¼
+     *
+     * @param originalPath
+     *            Ô­Ê¼Ä¿Â¼
+     * @return Ö¸ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Ä¿Â¼
+     */
+    // public String saveAvatarTemptoSDCard(String originalPath, int type) {
+    // String fileName = "";
+    // String tempPath = "";
+    // String tempPath_fileName = "";
+    // if (originalPath != null && !originalPath.equals("")) {
+    //
+    // fileName = originalPath
+    // .substring(originalPath.lastIndexOf("/") + 1);
+    //
+    // switch (type) {
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_NEWACCOUNT:// ï¿½Ã»ï¿½Í·ï¿½ï¿½
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_PROFILE_AVATAR:
+    // tempPath = PathCommonDefines.USER_AVATAR_FOLDER
+    // + File.separator;
+    //
+    // break;
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_PROFILE_CAMERA://
+    // ProfileActivityï¿½Ðµï¿½cameraï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½à¼­)
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_FEATUREDFEED:// ï¿½ï¿½ï¿½Ã»ï¿½Í·ï¿½ï¿½
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_ILIKE:
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_MYTRIPS:
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_NEWTRIP:
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_PICKCOVER:
+    // case OrdinaryCommonDefines.TRIP_ID_FROM_TRIPDETAIL:
+    //
+    // tempPath = PathCommonDefines.DCIM_FOTO_FOLDER + File.separator;
+    // break;
+    // default:
+    // break;
+    // }
+    //
+    // tempPath_fileName = tempPath + fileName;
+    // try {
+    //
+    // File files = new File(tempPath);
+    //
+    // File sourceFile = new File(originalPath);
+    // File targetFile = new File(tempPath_fileName);
+    //
+    // files.mkdirs();
+    // targetFile.createNewFile();
+    //
+    // copyFile(sourceFile, targetFile);
+    //
+    // } catch (Exception e) {
+    // e.printStackTrace();
+    // tempPath_fileName = "";
+    // }
+    // }
+    // return tempPath_fileName;
+    // }
+
+    /***
+     * Method to calculate the sample size for the bitmap
+     **/
+    public static int computeSampleSize(BitmapFactory.Options options,
+                                        int minSideLength, int maxNumOfPixels) {
+        int initialSize = computeInitialSampleSize(options, minSideLength,
+                maxNumOfPixels);
+
+        int roundedSize;
+        if (initialSize <= 8) {
+            roundedSize = 1;
+            while (roundedSize < initialSize) {
+                roundedSize <<= 1;
+            }
+        } else {
+            roundedSize = (initialSize + 7) / 8 * 8;
+        }
+
+        return roundedSize;
+    }
+
+    /***
+     * Method to calculate the sample size for the bitmap
+     **/
+    private static int computeInitialSampleSize(BitmapFactory.Options options,
+                                                int minSideLength, int maxNumOfPixels) {
+        double w = options.outWidth;
+        double h = options.outHeight;
+
+        int lowerBound = (maxNumOfPixels == -1) ? 1 : (int) Math.ceil(Math
+                .sqrt(w * h / maxNumOfPixels));
+        int upperBound = (minSideLength == -1) ? 128 : (int) Math.min(
+                Math.floor(w / minSideLength), Math.floor(h / minSideLength));
+
+        if (upperBound < lowerBound) {
+            // return the larger one when there is no overlapping zone.
+            return lowerBound;
+        }
+
+        if ((maxNumOfPixels == -1) && (minSideLength == -1)) {
+            return 1;
+        } else if (minSideLength == -1) {
+            return lowerBound;
+        } else {
+            return upperBound;
+        }
+    }
+
+    private String convertUrlToFileName(String url) {
+        String fn = null;
+        if (url != null && url.trim().length() > 0) {
+
+            if (url.contains(".png")) {
+
+                fn = String.valueOf(url.hashCode()) + ".png";
+
+            } else {
+
+                fn = String.valueOf(url.hashCode()) + ".jpg";
+
+            }
+
+        }
+        return fn;
+    }
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     *
+     * @param cachePath ï¿½ï¿½ï¿½Ø»ï¿½ï¿½æ¸¸Â·ï¿½ï¿½</br>PathCommonDefines.PHOTOCACHE_FOLDER ï¿½ï¿½ï¿½ò»º´ï¿½Í¼Æ¬Â·ï¿½ï¿½;</br>
+     *                  PathCommonDefines.MY_FAVOURITE_FOLDER ï¿½Òµï¿½ï¿½Õ²ï¿½Í¼Æ¬Â·ï¿½ï¿½
+     */
+    private void removeCache(String cachePath) {
+        String dirPath = cachePath;
+        File dir = new File(dirPath);
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return;
+        }
+        int dirSize = 0;
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].getName().contains(WHOLESALE_CONV)) {
+                dirSize += files[i].length();
+            }
+        }
+        if (dirSize > MAX_CACHE_SIZE_NEEDED * 1024 * 1024
+                || FREE_SD_SPACE_NEEDED_TO_CACHE > MiscUtils.freeSpaceOnSd()) {
+            int removeFactor = (int) ((0.4 * files.length) + 1);
+
+            Arrays.sort(files, new FileLastModifSort());
+            Logger.i(TAG, "Clear some expiredcache files ");
+
+            for (int i = 0; i < removeFactor; i++) {
+
+                if (files[i].getName().contains(WHOLESALE_CONV)) {
+                    files[i].delete();
+                }
+            }
+        }
+    }
+
+    protected void removeExpiredCache(String dirPath, String filename) {
+
+        File file = new File(dirPath, filename);
+        if (System.currentTimeMillis() - file.lastModified() > CACHE_EXPIRE_THRESHOLD) {
+            Logger.i(TAG, "Clear some expired cache files ");
+            file.delete();
+        }
+    }
+
+    class FileLastModifSort implements Comparator<File> {
+        @Override
+        public int compare(File arg0, File arg1) {
+            if (arg0.lastModified() > arg1.lastModified()) {
+                return 1;
+            } else if (arg0.lastModified() == arg1.lastModified()) {
+                return 0;
+            } else {
+                return -1;
+            }
+        }
+    }
 }

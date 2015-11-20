@@ -14,401 +14,390 @@ import com.listviewaddheader.utils.ScreenUtil.Screen;
 
 public class BitmapTool {
 
-	private final static String TAG = BitmapTool.class.getSimpleName();
-
-	/**
-	 * ¸ù¾ÝÍ¼ÏñURL´´½¨Bitmap
-	 * 
-	 * @param url
-	 *            URLµØÖ·
-	 * @return bitmap
-	 */
-	public Bitmap CreateImage(String url) {
-		// Logger.d("ImageDownloader",
-		// "¿ªÊ¼µ÷ÓÃCreateImage():" + System.currentTimeMillis());
-		Bitmap bitmap = null;
-		if (url == null || url.equals("")) {
-			return null;
-		}
-		try {
-			// Logger.d(
-			// "ImageDownloader",
-			// "C Before SDCard decodeStream==>" + "Heap:"
-			// + (Debug.getNativeHeapSize() / 1024) + "KB "
-			// + "FreeHeap:"
-			// + (Debug.getNativeHeapFreeSize() / 1024) + "KB "
-			// + "AllocatedHeap:"
-			// + (Debug.getNativeHeapAllocatedSize() / 1024)
-			// + "KB" + " url:" + url);
-
-			FileInputStream fis = new FileInputStream(url);
-			BitmapFactory.Options opts = new BitmapFactory.Options();
-			opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
-			opts.inTempStorage = new byte[100 * 1024];
-			opts.inPurgeable = true;
-			opts.inInputShareable = true;
-			bitmap = BitmapFactory.decodeStream(fis, null, opts);
-
-			// Logger.d(
-			// "ImageDownloader",
-			// "C After SDCard decodeStream==>" + "Heap:"
-			// + (Debug.getNativeHeapSize() / 1024) + "KB "
-			// + "FreeHeap:"
-			// + (Debug.getNativeHeapFreeSize() / 1024) + "KB "
-			// + "AllocatedHeap:"
-			// + (Debug.getNativeHeapAllocatedSize() / 1024)
-			// + "KB" + " url:" + url);
-		} catch (OutOfMemoryError e) {
-			Logger.e(TAG, "OutOfMemoryError", e);
-			System.gc();
-		} catch (FileNotFoundException e) {
-			Logger.e(TAG, "FileNotFoundException", e);
-		}
-		// Logger.d("ImageDownloader",
-		// "½áÊøµ÷ÓÃCreateImage():" + System.currentTimeMillis());
-		return bitmap;
-	}
-
-	/**
-	 * Í¼Æ¬Ëõ·Å´¦Àí,²¢±£´æµ½SDCard
-	 * 
-	 * @param byteArrayOutputStream
-	 *            Í¼Æ¬×Ö½ÚÁ÷
-	 * @param screen
-	 *            ÆÁÄ»¿í¸ß
-	 * @param url
-	 *            Í¼Æ¬ÍøÂçÂ·¾¶
-	 * @param cachePath
-	 *            ±¾µØ»º´æ¸¸Â·¾¶</br>PathCommonDefines.PHOTOCACHE_FOLDER ³ÌÐò»º´æÍ¼Æ¬Â·¾¶;</br>
-	 *            PathCommonDefines.MY_FAVOURITE_FOLDER ÎÒµÄÊÕ²ØÍ¼Æ¬Â·¾¶
-	 * @param isJpg
-	 *            ÊÇ·ñÊÇJpg
-	 * @return Ëõ·ÅºóµÄÍ¼Æ¬bitmap
-	 */
-	public static Bitmap saveZoomBitmapToSDCard(
-			ByteArrayOutputStream byteArrayOutputStream, Screen screen,
-			String url, String cachePath, boolean isJpg) {
-
-		Bitmap bitmap = null;
-		try {
-
-			byte[] byteArray = byteArrayOutputStream.toByteArray();
-
-			BitmapFactory.Options options = new BitmapFactory.Options();
-
-			options.inTempStorage = new byte[16 * 1024];
-
-			// Ö»¼ÓÔØÍ¼Æ¬µÄ±ß½ç
-			options.inJustDecodeBounds = true;
-
-			// »ñÈ¡BitmapÐÅÏ¢
-			BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length,
-					options);
-
-			// »ñÈ¡ÆÁÄ»µÄ¿íºÍ¸ß
-			int screenWidth = screen.widthPixels;
-			int screenHeight = screen.heightPixels;
-
-			// ÆÁÄ»×î´óÏñËØ¸öÊý
-			int maxNumOfPixels = screenWidth * screenHeight;
-
-			// ¼ÆËã²ÉÑùÂÊ
-			int sampleSize = computeSampleSize(options, -1, maxNumOfPixels);
-
-			options.inSampleSize = sampleSize;
+    private final static String TAG = BitmapTool.class.getSimpleName();
+
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½URLï¿½ï¿½ï¿½ï¿½Bitmap
+     *
+     * @param url URLï¿½ï¿½Ö·
+     * @return bitmap
+     */
+    public Bitmap CreateImage(String url) {
+        // Logger.d("ImageDownloader",
+        // "ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½CreateImage():" + System.currentTimeMillis());
+        Bitmap bitmap = null;
+        if (url == null || url.equals("")) {
+            return null;
+        }
+        try {
+            // Logger.d(
+            // "ImageDownloader",
+            // "C Before SDCard decodeStream==>" + "Heap:"
+            // + (Debug.getNativeHeapSize() / 1024) + "KB "
+            // + "FreeHeap:"
+            // + (Debug.getNativeHeapFreeSize() / 1024) + "KB "
+            // + "AllocatedHeap:"
+            // + (Debug.getNativeHeapAllocatedSize() / 1024)
+            // + "KB" + " url:" + url);
+
+            FileInputStream fis = new FileInputStream(url);
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            opts.inTempStorage = new byte[100 * 1024];
+            opts.inPurgeable = true;
+            opts.inInputShareable = true;
+            bitmap = BitmapFactory.decodeStream(fis, null, opts);
+
+            // Logger.d(
+            // "ImageDownloader",
+            // "C After SDCard decodeStream==>" + "Heap:"
+            // + (Debug.getNativeHeapSize() / 1024) + "KB "
+            // + "FreeHeap:"
+            // + (Debug.getNativeHeapFreeSize() / 1024) + "KB "
+            // + "AllocatedHeap:"
+            // + (Debug.getNativeHeapAllocatedSize() / 1024)
+            // + "KB" + " url:" + url);
+        } catch (OutOfMemoryError e) {
+            Logger.e(TAG, "OutOfMemoryError", e);
+            System.gc();
+        } catch (FileNotFoundException e) {
+            Logger.e(TAG, "FileNotFoundException", e);
+        }
+        // Logger.d("ImageDownloader",
+        // "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CreateImage():" + System.currentTimeMillis());
+        return bitmap;
+    }
+
+    /**
+     * Í¼Æ¬ï¿½ï¿½ï¿½Å´ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½æµ½SDCard
+     *
+     * @param byteArrayOutputStream Í¼Æ¬ï¿½Ö½ï¿½ï¿½ï¿½
+     * @param screen                ï¿½ï¿½Ä»ï¿½ï¿½ï¿½
+     * @param url                   Í¼Æ¬ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½
+     * @param cachePath             ï¿½ï¿½ï¿½Ø»ï¿½ï¿½æ¸¸Â·ï¿½ï¿½</br>PathCommonDefines.PHOTOCACHE_FOLDER ï¿½ï¿½ï¿½ò»º´ï¿½Í¼Æ¬Â·ï¿½ï¿½;</br>
+     *                              PathCommonDefines.MY_FAVOURITE_FOLDER ï¿½Òµï¿½ï¿½Õ²ï¿½Í¼Æ¬Â·ï¿½ï¿½
+     * @param isJpg                 ï¿½Ç·ï¿½ï¿½ï¿½Jpg
+     * @return ï¿½ï¿½ï¿½Åºï¿½ï¿½Í¼Æ¬bitmap
+     */
+    public static Bitmap saveZoomBitmapToSDCard(
+            ByteArrayOutputStream byteArrayOutputStream, Screen screen,
+            String url, String cachePath, boolean isJpg) {
+
+        Bitmap bitmap = null;
+        try {
+
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+
+            options.inTempStorage = new byte[16 * 1024];
+
+            // Ö»ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½Ä±ß½ï¿½
+            options.inJustDecodeBounds = true;
+
+            // ï¿½ï¿½È¡Bitmapï¿½ï¿½Ï¢
+            BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length,
+                    options);
+
+            // ï¿½ï¿½È¡ï¿½ï¿½Ä»ï¿½Ä¿ï¿½Í¸ï¿½
+            int screenWidth = screen.widthPixels;
+            int screenHeight = screen.heightPixels;
+
+            // ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½
+            int maxNumOfPixels = screenWidth * screenHeight;
+
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            int sampleSize = computeSampleSize(options, -1, maxNumOfPixels);
+
+            options.inSampleSize = sampleSize;
+
+            options.inJustDecodeBounds = false;
+
+            // ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ï¿½Í¼Æ¬,ï¿½ï¿½Ê±Îªï¿½ï¿½ï¿½Åºï¿½ï¿½Í¼Æ¬
+            bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
+                    byteArray.length, options);
 
-			options.inJustDecodeBounds = false;
+            // Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            int quality = 100;
 
-			// ÖØÐÂ¶ÁÈëÍ¼Æ¬,´ËÊ±ÎªËõ·ÅºóµÄÍ¼Æ¬
-			bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
-					byteArray.length, options);
+            // ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Jpg,pngï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½,ï¿½ï¿½ï¿½Ô²ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½
+            if (bitmap != null && isJpg) {
 
-			// Ñ¹Ëõ±ÈÀý
-			int quality = 100;
+                ByteArrayOutputStream saveBaos = new ByteArrayOutputStream();
 
-			// ÅÐ¶ÏÊÇ·ñÊÇJpg,pngÊÇÎÞËðÑ¹Ëõ,ËùÒÔ²»ÓÃ½øÐÐÖÊÁ¿Ñ¹Ëõ
-			if (bitmap != null && isJpg) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, saveBaos);
 
-				ByteArrayOutputStream saveBaos = new ByteArrayOutputStream();
+                // Ñ­ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½Ç·ï¿½ï¿½ï¿½ï¿½100kb,ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½
+                while (saveBaos.toByteArray().length / 1024 > 100) {
 
-				bitmap.compress(Bitmap.CompressFormat.JPEG, quality, saveBaos);
+                    // ï¿½ï¿½ï¿½ï¿½saveBaosï¿½ï¿½ï¿½ï¿½ï¿½saveBaos
+                    saveBaos.reset();
 
-				// Ñ­»·ÅÐ¶ÏÈç¹ûÑ¹ËõºóÍ¼Æ¬ÊÇ·ñ´óÓÚ100kb,´óÓÚ¼ÌÐøÑ¹Ëõ
-				while (saveBaos.toByteArray().length / 1024 > 100) {
+                    // Ã¿ï¿½Î¶ï¿½ï¿½ï¿½ï¿½ï¿½10
+                    quality -= 10;
 
-					// ÖØÖÃsaveBaos¼´Çå¿ÕsaveBaos
-					saveBaos.reset();
+                    // ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½optionsNum%ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½Åµï¿½saveBaosï¿½ï¿½
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, quality,
+                            saveBaos);
 
-					// Ã¿´Î¶¼¼õÉÙ10
-					quality -= 10;
+                }
+                // ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ByteArrayOutputStreamï¿½ï¿½Åµï¿½ByteArrayInputStreamï¿½ï¿½
+                ByteArrayInputStream saveBais = new ByteArrayInputStream(
+                        saveBaos.toByteArray());
 
-					// ÕâÀïÑ¹ËõoptionsNum%£¬°ÑÑ¹ËõºóµÄÊý¾Ý´æ·Åµ½saveBaosÖÐ
-					bitmap.compress(Bitmap.CompressFormat.JPEG, quality,
-							saveBaos);
+                bitmap = BitmapFactory.decodeStream(saveBais, null, null);
 
-				}
-				// °ÑÑ¹ËõºóµÄÊý¾ÝByteArrayOutputStream´æ·Åµ½ByteArrayInputStreamÖÐ
-				ByteArrayInputStream saveBais = new ByteArrayInputStream(
-						saveBaos.toByteArray());
+            }
 
-				bitmap = BitmapFactory.decodeStream(saveBais, null, null);
+            // ï¿½ï¿½ï¿½æµ½SDCard
+            ImageSDCacher.getImageSDCacher().saveBitmapToSDCard(bitmap, url,
+                    cachePath, isJpg, quality);
 
-			}
+        } catch (Exception e) {
+            Log.e("saveZoomBitmapToSDCard", "" + e);
+        }
 
-			// ±£´æµ½SDCard
-			ImageSDCacher.getImageSDCacher().saveBitmapToSDCard(bitmap, url,
-					cachePath, isJpg, quality);
+        return bitmap;
+    }
 
-		} catch (Exception e) {
-			Log.e("saveZoomBitmapToSDCard", "" + e);
-		}
+    /**
+     * Í¼Æ¬ï¿½ï¿½ï¿½Å´ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½æµ½SDCard
+     *
+     * @param screen    ï¿½ï¿½Ä»ï¿½ï¿½ï¿½
+     * @param bitmap    Í¼Æ¬bitmap
+     * @param cachePath ï¿½ï¿½ï¿½Ø»ï¿½ï¿½æ¸¸Â·ï¿½ï¿½</br>PathCommonDefines.PHOTOCACHE_FOLDER ï¿½ï¿½ï¿½ò»º´ï¿½Í¼Æ¬Â·ï¿½ï¿½;</br>
+     *                  PathCommonDefines.MY_FAVOURITE_FOLDER ï¿½Òµï¿½ï¿½Õ²ï¿½Í¼Æ¬Â·ï¿½ï¿½
+     * @param isJpg     ï¿½Ç·ï¿½ï¿½ï¿½Jpg
+     * @return ï¿½ï¿½ï¿½Åºï¿½ï¿½Í¼Æ¬bitmap
+     */
+    public static Bitmap saveZoomBitmapToSDCard(Bitmap bitmap, Screen screen,
+                                                String url, String cachePath, boolean isJpg) {
+        Bitmap tempBitmap = null;
+        byte[] byteArray = bitmap2Bytes(bitmap);
+        try {
 
-		return bitmap;
-	}
+            BitmapFactory.Options options = new BitmapFactory.Options();
 
-	/**
-	 * Í¼Æ¬Ëõ·Å´¦Àí,²¢±£´æµ½SDCard
-	 * 
-	 * @param screen
-	 *            ÆÁÄ»¿í¸ß
-	 * @param bitmap
-	 *            Í¼Æ¬bitmap
-	 * @param cachePath
-	 *            ±¾µØ»º´æ¸¸Â·¾¶</br>PathCommonDefines.PHOTOCACHE_FOLDER ³ÌÐò»º´æÍ¼Æ¬Â·¾¶;</br>
-	 *            PathCommonDefines.MY_FAVOURITE_FOLDER ÎÒµÄÊÕ²ØÍ¼Æ¬Â·¾¶
-	 * @param isJpg
-	 *            ÊÇ·ñÊÇJpg
-	 * @return Ëõ·ÅºóµÄÍ¼Æ¬bitmap
-	 */
-	public static Bitmap saveZoomBitmapToSDCard(Bitmap bitmap, Screen screen,
-			String url, String cachePath, boolean isJpg) {
-		Bitmap tempBitmap = null;
-		byte[] byteArray = bitmap2Bytes(bitmap);
-		try {
+            // ï¿½ï¿½È¡ï¿½ï¿½Ä»ï¿½Ä¿ï¿½Í¸ï¿½
+            int screenWidth = screen.widthPixels;
+            int screenHeight = screen.heightPixels;
 
-			BitmapFactory.Options options = new BitmapFactory.Options();
+            // ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½
+            int maxNumOfPixels = screenWidth * screenHeight;
 
-			// »ñÈ¡ÆÁÄ»µÄ¿íºÍ¸ß
-			int screenWidth = screen.widthPixels;
-			int screenHeight = screen.heightPixels;
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            int sampleSize = computeSampleSize(options, -1, maxNumOfPixels);
 
-			// ÆÁÄ»×î´óÏñËØ¸öÊý
-			int maxNumOfPixels = screenWidth * screenHeight;
+            options.inSampleSize = sampleSize;
 
-			// ¼ÆËã²ÉÑùÂÊ
-			int sampleSize = computeSampleSize(options, -1, maxNumOfPixels);
+            options.inJustDecodeBounds = false;
 
-			options.inSampleSize = sampleSize;
+            // ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ï¿½Í¼Æ¬,ï¿½ï¿½Ê±Îªï¿½ï¿½ï¿½Åºï¿½ï¿½Í¼Æ¬
+            tempBitmap = BitmapFactory.decodeByteArray(byteArray, 0,
+                    byteArray.length, options);
+
+            // Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            int quality = 100;
 
-			options.inJustDecodeBounds = false;
+            // ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Jpg,pngï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½,ï¿½ï¿½ï¿½Ô²ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½
+            if (bitmap != null && isJpg) {
 
-			// ÖØÐÂ¶ÁÈëÍ¼Æ¬,´ËÊ±ÎªËõ·ÅºóµÄÍ¼Æ¬
-			tempBitmap = BitmapFactory.decodeByteArray(byteArray, 0,
-					byteArray.length, options);
+                ByteArrayOutputStream saveBaos = new ByteArrayOutputStream();
 
-			// Ñ¹Ëõ±ÈÀý
-			int quality = 100;
+                tempBitmap.compress(Bitmap.CompressFormat.JPEG, quality,
+                        saveBaos);
 
-			// ÅÐ¶ÏÊÇ·ñÊÇJpg,pngÊÇÎÞËðÑ¹Ëõ,ËùÒÔ²»ÓÃ½øÐÐÖÊÁ¿Ñ¹Ëõ
-			if (bitmap != null && isJpg) {
+                // Ñ­ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½Ç·ï¿½ï¿½ï¿½ï¿½100kb,ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½
+                while (saveBaos.toByteArray().length / 1024 > 100) {
 
-				ByteArrayOutputStream saveBaos = new ByteArrayOutputStream();
+                    // ï¿½ï¿½ï¿½ï¿½saveBaosï¿½ï¿½ï¿½ï¿½ï¿½saveBaos
+                    saveBaos.reset();
 
-				tempBitmap.compress(Bitmap.CompressFormat.JPEG, quality,
-						saveBaos);
+                    // Ã¿ï¿½Î¶ï¿½ï¿½ï¿½ï¿½ï¿½10
+                    quality -= 10;
 
-				// Ñ­»·ÅÐ¶ÏÈç¹ûÑ¹ËõºóÍ¼Æ¬ÊÇ·ñ´óÓÚ100kb,´óÓÚ¼ÌÐøÑ¹Ëõ
-				while (saveBaos.toByteArray().length / 1024 > 100) {
+                    // ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½optionsNum%ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½Åµï¿½saveBaosï¿½ï¿½
+                    tempBitmap.compress(Bitmap.CompressFormat.JPEG, quality,
+                            saveBaos);
 
-					// ÖØÖÃsaveBaos¼´Çå¿ÕsaveBaos
-					saveBaos.reset();
+                }
+                // ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ByteArrayOutputStreamï¿½ï¿½Åµï¿½ByteArrayInputStreamï¿½ï¿½
+                ByteArrayInputStream saveBais = new ByteArrayInputStream(
+                        saveBaos.toByteArray());
 
-					// Ã¿´Î¶¼¼õÉÙ10
-					quality -= 10;
+                tempBitmap = BitmapFactory.decodeStream(saveBais, null, null);
 
-					// ÕâÀïÑ¹ËõoptionsNum%£¬°ÑÑ¹ËõºóµÄÊý¾Ý´æ·Åµ½saveBaosÖÐ
-					tempBitmap.compress(Bitmap.CompressFormat.JPEG, quality,
-							saveBaos);
+            }
 
-				}
-				// °ÑÑ¹ËõºóµÄÊý¾ÝByteArrayOutputStream´æ·Åµ½ByteArrayInputStreamÖÐ
-				ByteArrayInputStream saveBais = new ByteArrayInputStream(
-						saveBaos.toByteArray());
+            // ï¿½ï¿½ï¿½æµ½SDCard
+            ImageSDCacher.getImageSDCacher().saveBitmapToSDCard(tempBitmap,
+                    url, cachePath, isJpg, quality);
 
-				tempBitmap = BitmapFactory.decodeStream(saveBais, null, null);
+        } catch (Exception e) {
+            Log.e("", e.getMessage());
+        }
 
-			}
+        return tempBitmap;
+    }
 
-			// ±£´æµ½SDCard
-			ImageSDCacher.getImageSDCacher().saveBitmapToSDCard(tempBitmap,
-					url, cachePath, isJpg, quality);
+    public static byte[] bitmap2Bytes(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        return baos.toByteArray();
+    }
 
-		} catch (Exception e) {
-			Log.e("", e.getMessage());
-		}
+    // Recycle the resource of the Image
+    public void recycleImage(Bitmap bitmap) {
+        try {
+            if (bitmap != null && !bitmap.isMutable() && !bitmap.isRecycled()) {
+                bitmap.recycle();
+                System.gc();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.e(TAG, "bitmap recycle excpetion");
+        }
+    }
 
-		return tempBitmap;
-	}
+    /**
+     * ï¿½æ»»ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½
+     *
+     * @param fileName Í¼Æ¬ï¿½Ä´ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     * @return Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     */
+    public static String renameUploadFile(String fileName) {
 
-	public static byte[] bitmap2Bytes(Bitmap bitmap) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-		return baos.toByteArray();
-	}
+        String result = "yepcolor";
 
-	// Recycle the resource of the Image
-	public void recycleImage(Bitmap bitmap) {
-		try {
-			if (bitmap != null && !bitmap.isMutable() && !bitmap.isRecycled()) {
-				bitmap.recycle();
-				System.gc();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			Logger.e(TAG, "bitmap recycle excpetion");
-		}
-	}
+        if (fileName != null && !fileName.equals("")) {
 
-	/**
-	 * Ìæ»»ÌØÊâ×Ö·û
-	 * 
-	 * @param fileName
-	 *            Í¼Æ¬µÄ´¦ÀíÇ°µÄÃû×Ö
-	 * @return Í¼Æ¬´¦ÀíºóµÄÃû×Ö
-	 */
-	public static String renameUploadFile(String fileName) {
+            result = fileName.hashCode() + "";// ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Æµï¿½hashcodeÖµ
 
-		String result = "yepcolor";
+        }
+        return result;
+        // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // String regEx = "[^a-zA-Z0-9]";
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½
+        // String regEx =
+        // "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~ï¿½ï¿½@#ï¿½ï¿½%ï¿½ï¿½ï¿½ï¿½&*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+|{}ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]";
+        // Pattern p = Pattern.compile(regEx);
+        // Matcher m = p.matcher(fileName);
+        // result = m.replaceAll("").trim();
 
-		if (fileName != null && !fileName.equals("")) {
+    }
 
-			result = fileName.hashCode() + "";// »ñµÃÎÄ¼þÃû³ÆµÄhashcodeÖµ
+    /**
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     *
+     * @param options
+     * @param minSideLength
+     * @param maxNumOfPixels
+     * @return
+     */
+    public static int computeSampleSize(BitmapFactory.Options options,
+                                        int minSideLength, int maxNumOfPixels) {
 
-		}
-		return result;
-		// Ö»ÔÊÐí×ÖÄ¸ºÍÊý×Ö
-		// String regEx = "[^a-zA-Z0-9]";
-		// Çå³ýµôËùÓÐÌØÊâ×Ö·û
-		// String regEx =
-		// "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~£¡@#£¤%¡­¡­&*£¨£©¡ª¡ª+|{}¡¾¡¿¡®£»£º¡±¡°¡¯¡££¬¡¢£¿]";
-		// Pattern p = Pattern.compile(regEx);
-		// Matcher m = p.matcher(fileName);
-		// result = m.replaceAll("").trim();
+        int initialSize = computeInitialSampleSize(options, minSideLength,
 
-	}
+                maxNumOfPixels);
 
-	/**
-	 * ¼ÆËã²ÉÑùÂÊ
-	 * 
-	 * @param options
-	 * @param minSideLength
-	 * @param maxNumOfPixels
-	 * @return
-	 */
-	public static int computeSampleSize(BitmapFactory.Options options,
-			int minSideLength, int maxNumOfPixels) {
+        int roundedSize;
 
-		int initialSize = computeInitialSampleSize(options, minSideLength,
+        if (initialSize <= 8) {
 
-		maxNumOfPixels);
+            roundedSize = 1;
 
-		int roundedSize;
+            while (roundedSize < initialSize) {
 
-		if (initialSize <= 8) {
+                roundedSize <<= 1;
 
-			roundedSize = 1;
+            }
 
-			while (roundedSize < initialSize) {
+        } else {
 
-				roundedSize <<= 1;
+            roundedSize = (initialSize + 7) / 8 * 8;
 
-			}
+        }
 
-		} else {
+        return roundedSize;
 
-			roundedSize = (initialSize + 7) / 8 * 8;
+    }
 
-		}
+    /**
+     * ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+     *
+     * @param options
+     * @param minSideLength
+     * @param maxNumOfPixels
+     * @return
+     */
+    private static int computeInitialSampleSize(BitmapFactory.Options options,
+                                                int minSideLength, int maxNumOfPixels) {
 
-		return roundedSize;
+        double w = options.outWidth;
 
-	}
+        double h = options.outHeight;
 
-	/**
-	 * ¼ÆËã³õÊ¼²ÉÑùÂÊ
-	 * 
-	 * @param options
-	 * @param minSideLength
-	 * @param maxNumOfPixels
-	 * @return
-	 */
-	private static int computeInitialSampleSize(BitmapFactory.Options options,
-			int minSideLength, int maxNumOfPixels) {
+        int lowerBound = (maxNumOfPixels == -1) ? 1 :
 
-		double w = options.outWidth;
+                (int) Math.ceil(Math.sqrt(w * h / maxNumOfPixels));
 
-		double h = options.outHeight;
+        int upperBound = (minSideLength == -1) ? 128 :
 
-		int lowerBound = (maxNumOfPixels == -1) ? 1 :
+                (int) Math.min(Math.floor(w / minSideLength),
 
-		(int) Math.ceil(Math.sqrt(w * h / maxNumOfPixels));
+                        Math.floor(h / minSideLength));
 
-		int upperBound = (minSideLength == -1) ? 128 :
+        if (upperBound < lowerBound) {
 
-		(int) Math.min(Math.floor(w / minSideLength),
+            // return the larger one when there is no overlapping zone.
 
-		Math.floor(h / minSideLength));
+            return lowerBound;
 
-		if (upperBound < lowerBound) {
+        }
 
-			// return the larger one when there is no overlapping zone.
+        if ((maxNumOfPixels == -1) &&
 
-			return lowerBound;
+                (minSideLength == -1)) {
 
-		}
+            return 1;
 
-		if ((maxNumOfPixels == -1) &&
+        } else if (minSideLength == -1) {
 
-		(minSideLength == -1)) {
+            return lowerBound;
 
-			return 1;
+        } else {
 
-		} else if (minSideLength == -1) {
+            return upperBound;
 
-			return lowerBound;
+        }
 
-		} else {
-
-			return upperBound;
-
-		}
-
-	}
-	/**
-	 * ¸ù¾ÝÍ¼Æ¬µÄÂ·¾¶»ñÈ¡Í¼Æ¬µÄ´óÐ¡
-	 * 
-	 * @param item
-	 */
-	// public static void getBitmapSize(Items item) {
-	// URL url;
-	// try {
-	// url = new URL(item.getPicUrl());
-	// URLConnection conn = url.openConnection();
-	// conn.connect();
-	// InputStream is = conn.getInputStream();
-	// BitmapFactory.Options options = new BitmapFactory.Options();
-	// BitmapFactory.decodeStream(is, null, options);
-	// options.inJustDecodeBounds = true;
-	// int height = options.outHeight;
-	// int width = options.outWidth;
-	// item.setImageWidth(width);
-	// item.setImageHeight(height);
-	// } catch (MalformedURLException e) {
-	// e.printStackTrace();
-	// } catch (IOException e) {
-	// e.printStackTrace();
-	// }
-	//
-	// }
+    }
+    /**
+     * ï¿½ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½È¡Í¼Æ¬ï¿½Ä´ï¿½Ð¡
+     *
+     * @param item
+     */
+    // public static void getBitmapSize(Items item) {
+    // URL url;
+    // try {
+    // url = new URL(item.getPicUrl());
+    // URLConnection conn = url.openConnection();
+    // conn.connect();
+    // InputStream is = conn.getInputStream();
+    // BitmapFactory.Options options = new BitmapFactory.Options();
+    // BitmapFactory.decodeStream(is, null, options);
+    // options.inJustDecodeBounds = true;
+    // int height = options.outHeight;
+    // int width = options.outWidth;
+    // item.setImageWidth(width);
+    // item.setImageHeight(height);
+    // } catch (MalformedURLException e) {
+    // e.printStackTrace();
+    // } catch (IOException e) {
+    // e.printStackTrace();
+    // }
+    //
+    // }
 
 }
